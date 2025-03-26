@@ -1,0 +1,53 @@
+/* client/src/components/InputVocab.css */
+.input-vocab-container {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.input-row input {
+    flex: 1; /* Each input takes equal space */
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.add-row-button,
+.save-button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.add-row-button {
+    background-color: #28a745; /* Green */
+    color: white;
+}
+
+.save-button {
+    background-color: #007bff; /* Blue */
+    color: white;
+}
+
+.add-row-button:hover,
+.save-button:hover {
+    opacity: 0.9;
+}
+
+.error-message {
+    color: red;
+    margin-top: 10px;
+}
+.success-message {
+    color: green;
+    margin-top: 10px;
+}

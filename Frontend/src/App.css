@@ -1,0 +1,65 @@
+/* client/src/App.css (Revised - Global Styles) */
+/* General Styles */
+body {
+    font-family: "Roboto", sans-serif; /* Or your preferred font */
+    background-color: #f8f9fa; /* Light grey background */
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Make sure it takes up the full viewport height */
+}
+
+/* Header Styles */
+.app-header {
+    background-color: #fff; /* White */
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.app-header nav {
+    display: flex;
+    justify-content: space-between; /* Space out items in the nav */
+    align-items: center;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #007bff; /* Primary color */
+    padding: 10px 15px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.nav-link:hover {
+    background-color: #cce5ff; /* Light blue on hover */
+}
+
+.nav-button {
+    background-color: #e74c3c; /* Red */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.nav-button:hover {
+    background-color: #c0392b;
+}
+
+.user-info {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+/* Main Content */
+.app-main {
+    flex: 1; /* Allow the main content to take up the remaining space */
+    padding: 20px;
+}
