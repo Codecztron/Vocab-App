@@ -1,0 +1,855 @@
+/* App.css */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+/* Main container */
+.app-container {
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.app-content {
+    width: 100%;
+    max-width: 1000px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.app-title {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #4a6baf;
+    font-size: 28px;
+}
+
+/* Tabs */
+.tabs {
+    width: 100%;
+}
+
+.tab-list {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+}
+
+.tab-button:hover {
+    color: #4a6baf;
+}
+
+.tab-button.active {
+    color: #4a6baf;
+    border-bottom: 3px solid #4a6baf;
+}
+
+/* Vocab List Tab */
+.vocab-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.vocab-list-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.vocab-table-container {
+    overflow-x: auto;
+    max-height: 500px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.vocab-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.vocab-table th,
+.vocab-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.vocab-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #666;
+    position: sticky;
+    top: 0;
+}
+
+.vocab-english {
+    font-weight: 500;
+}
+
+.vocab-additional {
+    color: #666;
+    font-size: 14px;
+}
+
+.vocab-status {
+    text-align: center;
+}
+
+.learned-row {
+    background-color: #f0f7f0;
+}
+
+/* Checkbox styling */
+.checkbox-container {
+    display: block;
+    position: relative;
+    padding-left: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    user-select: none;
+    margin: 0 auto;
+    width: 20px;
+    height: 20px;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background-color: #eee;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+    background-color: #ccc;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background-color: #4a6baf;
+    border: 1px solid #4a6baf;
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.checkbox-container .checkmark:after {
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Quiz Tab */
+.quiz-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.quiz-question {
+    margin-bottom: 20px;
+}
+
+.quiz-question h3 {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.quiz-word {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+}
+
+.quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.quiz-option {
+    padding: 15px;
+    text-align: left;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.quiz-option:hover:not(:disabled) {
+    background-color: #f5f5f5;
+    border-color: #aaa;
+}
+
+.quiz-option:disabled {
+    cursor: default;
+}
+
+.correct-answer {
+    background-color: #e6f7e6 !important;
+    border-color: #4caf50 !important;
+}
+
+.wrong-answer {
+    background-color: #ffebee !important;
+    border-color: #f44336 !important;
+}
+
+.answer-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.answer-icon.correct {
+    color: #4caf50;
+}
+
+.answer-icon.wrong {
+    color: #f44336;
+}
+
+.quiz-result {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    margin-top: 10px;
+}
+
+.additional-info {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.info-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+/* Quiz Welcome Screen */
+.quiz-welcome {
+    text-align: center;
+    padding: 60px 40px;
+    background: linear-gradient(
+        145deg,
+        #e0e7ff,
+        #ced4da
+    ); /* Light gradient background */
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12); /* Stronger, softer shadow */
+    border: 1px solid #d1d9e6; /* Subtle border */
+}
+
+.quiz-welcome h3 {
+    font-size: 32px; /* Increased font size */
+    margin-bottom: 25px;
+    color: #3b5998; /* Slightly darker primary color */
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05); /* Subtle text shadow */
+}
+
+.quiz-welcome p {
+    margin-bottom: 40px; /* More margin */
+    color: #6a707b; /* Slightly darker paragraph color */
+    font-size: 17px; /* Slightly larger font size for paragraph */
+    line-height: 1.7; /* Improved line height for readability */
+}
+
+.quiz-score {
+    margin-top: 30px; /* Increased margin */
+    padding: 30px;
+    background-color: #ffffff; /* White background for score box */
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15); /* Enhanced shadow for score box */
+    display: inline-block;
+    border: 2px solid #4a6baf; /* Border to highlight score box */
+}
+
+.quiz-score h4 {
+    margin-bottom: 20px;
+    font-size: 22px;
+    color: #555;
+    font-weight: 600;
+}
+
+.score-value {
+    font-size: 36px; /* Larger score value */
+    font-weight: 800; /* Bolder font weight */
+    color: #4a6baf;
+    margin-bottom: 15px;
+}
+
+.score-percentage {
+    font-size: 20px;
+    color: #777;
+}
+
+/* Buttons in Quiz Welcome */
+.quiz-actions {
+    margin-top: 30px; /* Increased margin */
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* More space between buttons */
+}
+
+/* Buttons */
+.primary-button {
+    background-color: #4a6baf;
+    color: white;
+    border: none;
+    padding: 10px 20px; /* Slightly larger buttons */
+    border-radius: 6px; /* More rounded corners */
+    cursor: pointer;
+    font-size: 16px; /* Slightly larger font size */
+    transition:
+        background-color 0.3s,
+        transform 0.2s; /* Add transform transition */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
+}
+
+.primary-button:hover {
+    background-color: #3a5590;
+    transform: translateY(-2px); /* Slight lift on hover */
+    box-shadow: 0 4px 7px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+}
+
+.primary-button:active {
+    transform: translateY(0); /* Reset lift on active */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Reset shadow on active */
+}
+
+.primary-button.large {
+    padding: 14px 28px; /* Larger padding for large buttons */
+    font-size: 18px;
+}
+
+.secondary-button {
+    background-color: white;
+    color: #4a6baf;
+    border: 2px solid #4a6baf;
+    padding: 10px 20px; /* Slightly larger buttons */
+    border-radius: 6px; /* More rounded corners */
+    cursor: pointer;
+    font-size: 16px; /* Slightly larger font size */
+    transition:
+        background-color 0.3s,
+        color 0.3s,
+        border-color 0.3s,
+        transform 0.2s; /* Add transform transition */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
+}
+
+.secondary-button:hover {
+    background-color: #f0f2f5;
+    color: #3a5590;
+    border-color: #3a5590;
+    transform: translateY(-2px); /* Slight lift on hover */
+    box-shadow: 0 4px 7px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+}
+
+.secondary-button:active {
+    transform: translateY(0); /* Reset lift on active */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Reset shadow on active */
+}
+
+.secondary-button.large {
+    padding: 14px 28px; /* Larger padding for large buttons */
+    font-size: 18px;
+}
+
+/* Loading & Upload */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 20px;
+}
+
+.loading-message {
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+.upload-container {
+    text-align: center;
+    max-width: 400px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+}
+
+.upload-button {
+    display: block;
+    margin: 15px auto;
+    cursor: pointer;
+}
+
+.upload-box {
+    border: 2px dashed #aaa;
+    padding: 15px;
+    border-radius: 5px;
+    transition: all 0.3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.upload-box:hover {
+    border-color: #4a6baf;
+    background-color: #f8f9fa;
+}
+
+.hidden-input {
+    display: none;
+}
+
+.format-hint {
+    font-size: 12px;
+    color: #666;
+    margin-top: 10px;
+}
+
+/* Quiz Review */
+.quiz-review {
+    background-color: #fefefe;
+    border-radius: 15px; /* More rounded corners */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Stronger shadow */
+    padding: 30px;
+    margin-top: 20px;
+    border: none; /* Remove default border */
+}
+
+.quiz-review h4 {
+    font-size: 26px; /* Slightly larger title */
+    color: #333;
+    margin-bottom: 30px; /* More space below title */
+    text-align: center;
+    font-weight: 700; /* Bold title */
+    letter-spacing: -0.5px; /* Tighten letter spacing a bit */
+}
+
+.review-minimap {
+    display: flex;
+    justify-content: center;
+    gap: 8px; /* Space between minimap buttons */
+    margin-bottom: 20px; /* Space below minimap */
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+}
+
+.minimap-button {
+    background-color: #e0e7ff; /* Light background for buttons */
+    border: none;
+    border-radius: 50%; /* Circular buttons */
+    width: 32px; /* Fixed width */
+    height: 32px; /* Fixed height, makes it circular */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #555;
+    cursor: pointer;
+    transition:
+        background-color 0.3s,
+        color 0.3s,
+        transform 0.2s;
+}
+
+.minimap-button:hover {
+    background-color: #4a6baf; /* Highlight color on hover */
+    color: white;
+    transform: scale(1.1); /* Slightly enlarge on hover */
+}
+
+.minimap-button.active {
+    background-color: #4a6baf; /* Active state color */
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow to active button */
+}
+
+.minimap-button.correct {
+    color: #4caf50; /* Green color for correct answers */
+}
+
+.minimap-button.wrong {
+    color: #f44336; /* Red color for wrong answers */
+}
+
+.review-popup {
+    position: relative; /* For positioning close button */
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15); /* Shadow for popup */
+    margin-bottom: 20px; /* Space below popup */
+}
+
+.popup-close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #777;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.popup-close-button:hover {
+    color: #333;
+}
+
+.review-item {
+    margin-bottom: 25px; /* Slightly less margin between items */
+    padding: 25px; /* More padding inside item */
+    border: 1px solid #e0e0e0; /* Lighter border */
+    border-radius: 12px; /* More rounded item corners */
+    background-color: #fafafa;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06); /* Softer item shadow */
+}
+
+.review-question {
+    font-size: 18px; /* Slightly larger question text */
+    color: #555;
+    margin-bottom: 18px; /* More space below question */
+}
+
+.review-question strong {
+    color: #4a6baf;
+}
+
+.review-options-list {
+    list-style: none;
+    padding: 0;
+}
+
+.review-option {
+    padding: 14px 18px; /* More padding in options */
+    margin-bottom: 10px; /* More space between options */
+    border-radius: 8px; /* Rounded option corners */
+    background-color: #fff;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    color: #666;
+    position: relative;
+    transition:
+        background-color 0.2s,
+        border-color 0.2s; /* Option hover transition */
+}
+
+.review-option:hover {
+    background-color: #f8f8f8; /* Lighter hover background */
+    border-color: #ccc; /* Lighter hover border */
+}
+
+.review-option.correct-answer {
+    background-color: #d4edda !important; /* Lighter green for correct */
+    border-color: #c3e6cb !important; /* Lighter green border */
+    color: #155724; /* Darker text for better contrast */
+    font-weight: 500; /* Slightly bolder correct answer */
+}
+
+.review-option.wrong-answer {
+    background-color: #f8d7da !important; /* Lighter red for wrong */
+    border-color: #f5c6cb !important; /* Lighter red border */
+    color: #721c24; /* Darker text for better contrast */
+}
+
+.review-option .answer-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.review-option .answer-icon.correct {
+    color: #28a745; /* Standard Bootstrap green */
+}
+
+.review-option .answer-icon.wrong {
+    color: #dc3545; /* Standard Bootstrap red */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .app-container {
+        padding: 10px;
+    }
+
+    .app-content {
+        padding: 15px;
+        margin-top: 10px;
+    }
+
+    .app-title {
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .tab-button {
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+
+    .quiz-welcome {
+        padding: 40px 20px;
+    }
+
+    .quiz-welcome h3 {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+
+    .quiz-welcome p {
+        font-size: 16px;
+        margin-bottom: 30px;
+    }
+
+    .quiz-score h4 {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+
+    .score-value {
+        font-size: 30px;
+        margin-bottom: 10px;
+    }
+
+    .score-percentage {
+        font-size: 18px;
+    }
+
+    .primary-button,
+    .secondary-button {
+        padding: 8px 8px;
+        font-size: 12px;
+    }
+
+    .primary-button.large,
+    .secondary-button.large {
+        padding: 12px 24px;
+        font-size: 16px;
+    }
+
+    .quiz-card {
+        padding: 15px;
+    }
+
+    .quiz-question h3 {
+        font-size: 16px;
+    }
+
+    .quiz-word {
+        font-size: 20px;
+    }
+
+    .quiz-option {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    .additional-info {
+        padding: 8px;
+        font-size: 13px;
+    }
+
+    .format-hint {
+        font-size: 11px;
+    }
+
+    .loading-message {
+        font-size: 16px;
+    }
+
+    .checkbox-container {
+        font-size: 14px;
+        width: 18px;
+        height: 18px;
+        padding-left: 20px;
+    }
+
+    .checkmark {
+        height: 18px;
+        width: 18px;
+    }
+
+    .checkbox-container .checkmark:after {
+        left: 5px;
+        top: 1px;
+        width: 4px;
+        height: 9px;
+    }
+
+    .vocab-list-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .vocab-list-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .vocab-additional {
+        display: none; /* Hide additional info on small screens */
+    }
+
+    .vocab-table th,
+    .vocab-table td {
+        padding: 8px;
+    }
+
+    .quiz-review {
+        padding: 20px;
+        margin-top: 15px;
+    }
+
+    .quiz-review h4 {
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+
+    .review-item {
+        margin-bottom: 20px;
+        padding: 15px;
+    }
+
+    .review-question {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .review-option {
+        padding: 10px 12px;
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .review-option .answer-icon {
+        font-size: 16px;
+    }
+}
+
+/* Footer Styling */
+.app-footer {
+    margin-top: 40px;
+    padding: 30px;
+    background-color: #fff; /* Match app-content background */
+    color: #666; /* Match general text color */
+    text-align: center;
+    border-top: 1px solid #ddd; /* Softer border to match other sections */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Match app-content shadow */
+}
+
+.app-footer p {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.footer-links a {
+    color: #666; /* Match footer text color */
+    text-decoration: none;
+    font-size: 16px;
+    transition: color 0.3s ease;
+    padding: 8px 15px;
+    border-radius: 5px;
+}
+
+.footer-links a:hover {
+    color: #4a6baf; /* Highlight color on hover - keep primary color */
+}
+
+.footer-links a svg {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+/* Responsive Footer Adjustments */
+@media (max-width: 768px) {
+    .app-footer {
+        padding: 20px;
+    }
+
+    .footer-links {
+        flex-direction: column; /* Stack links on smaller screens */
+        gap: 10px;
+    }
+
+    .footer-links a {
+        font-size: 14px;
+    }
+}
