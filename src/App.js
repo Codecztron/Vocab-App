@@ -1184,12 +1184,6 @@ function App() {
                             <div className="quiz-review">
                               <div className="review-header">
                                 <h4>Review Soal Quiz</h4>
-                                <button
-                                  onClick={toggleReview} // Button to close review -> back to score
-                                  className="secondary-button close-review-button"
-                                >
-                                  Kembali ke Hasil Quiz
-                                </button>
                               </div>
 
                               <div className="review-minimap">
@@ -1313,6 +1307,12 @@ function App() {
                               )}
 
                               <div className="quiz-actions review-actions">
+                                <button
+                                  onClick={toggleReview} // Button to close review -> back to score
+                                  className="secondary-button close-review-button"
+                                >
+                                  Kembali ke Hasil Quiz
+                                </button>
                                 <button
                                   onClick={restartQuiz}
                                   className="primary-button"
