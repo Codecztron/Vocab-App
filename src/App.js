@@ -989,7 +989,7 @@ function App() {
                         <button
                           onClick={startQuiz}
                           className="primary-button"
-                          disabled={savedVocabs.length < 4}
+                          // disabled={savedVocabs.length < 4}
                           title={
                             savedVocabs.length < 4
                               ? "Tandai minimal 4 kata untuk memulai quiz"
@@ -1162,7 +1162,7 @@ function App() {
                                 <button
                                   onClick={restartQuiz}
                                   className="primary-button"
-                                  disabled={savedVocabs.length < 4}
+                                  // disabled={savedVocabs.length < 4}
                                   title={
                                     savedVocabs.length < 4
                                       ? "Minimal 4 kata untuk mulai ulang"
@@ -1316,7 +1316,7 @@ function App() {
                                 <button
                                   onClick={restartQuiz}
                                   className="primary-button"
-                                  disabled={savedVocabs.length < 4}
+                                  // disabled={savedVocabs.length < 4}
                                   title={
                                     savedVocabs.length < 4
                                       ? "Minimal 4 kata untuk mulai ulang"
@@ -1340,18 +1340,16 @@ function App() {
                         <div>
                           <h3>Selamat Datang di Quiz Kosakata!</h3>
                           <p>
-                            Quiz ini akan menguji kata-kata yang telah Anda
-                            tandai sebagai "sudah dihafal". Saat ini Anda telah
-                            menandai <strong>{savedVocabs.length}</strong>{" "}
-                            kosakata dari total {vocabList.length}.
+                            Quiz ini akan melatih vocab yang sudah dihafal. Saat
+                            ini Anda telah menandai{" "}
+                            <strong>{savedVocabs.length}</strong> kosakata dari
+                            total {vocabList.length}.
                           </p>
 
                           {savedVocabs.length < 4 && (
                             <p className="warning-message">
-                              Anda memerlukan minimal <strong>4</strong>{" "}
-                              kosakata yang ditandai untuk memulai quiz. Silakan
-                              kembali ke daftar kosakata dan tandai beberapa
-                              kata.
+                              Memerlukan minimal <strong>4</strong> kosakata
+                              yang ditandai untuk memulai quiz.
                             </p>
                           )}
 
@@ -1367,7 +1365,7 @@ function App() {
                             <button
                               onClick={startQuiz}
                               className="primary-button large"
-                              disabled={savedVocabs.length < 4}
+                              // disabled={savedVocabs.length < 4}
                               title={
                                 savedVocabs.length < 4
                                   ? "Tandai minimal 4 kata"
@@ -1405,7 +1403,7 @@ function App() {
                                 <button
                                   onClick={restartQuiz} // Offer restart as well
                                   className="secondary-button"
-                                  disabled={savedVocabs.length < 4}
+                                  // disabled={savedVocabs.length < 4}
                                   title={
                                     savedVocabs.length < 4
                                       ? "Minimal 4 kata"

@@ -367,7 +367,94 @@ body {
     font-size: 20px;
     color: #777;
 }
+/* Alert Styling */
+.custom-alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure it's on top */
+}
 
+.custom-alert-content {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+}
+
+.custom-alert-content p {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.custom-alert-close-button {
+    background-color: #4a6baf;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.custom-alert-close-button:hover {
+    background-color: #3a5590;
+}
+
+/* Alert type-specific styling */
+.custom-alert-overlay.success .custom-alert-content {
+    /* background-color: #d4edda; */
+    border: 2px solid #c3e6cb; /* Green border for success */
+}
+
+.custom-alert-overlay.success .custom-alert-content p {
+    color: #155724; /* Dark green text for success */
+}
+
+.custom-alert-overlay.error .custom-alert-content {
+    border: 2px solid #f5c6cb; /* Red border for error */
+}
+
+.custom-alert-overlay.error .custom-alert-content p {
+    color: #721c24; /* Dark red text for error */
+}
+
+.custom-alert-overlay.warning .custom-alert-content {
+    border: 2px solid #fff3cd; /* Yellow border for warning */
+}
+
+.custom-alert-overlay.warning .custom-alert-content p {
+    color: #856404; /* Dark yellow/brown text for warning */
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .alert-container {
+        right: 10px;
+        left: 10px; /* Take full width on smaller screens */
+        width: auto; /* Allow the alert to adjust */
+    }
+    .alert {
+        width: auto;
+        padding: 12px 15px;
+        font-size: 14px;
+    }
+    .alert-close-button {
+        font-size: 20px;
+    }
+}
 /* Buttons in Quiz Welcome */
 
 .quiz-actions {
@@ -900,8 +987,8 @@ body {
     }
 
     .quiz-welcome h3 {
-        font-size: 24px;
-        margin-bottom: 20px;
+        font-size: 20px;
+        margin-bottom: 10px;
     }
 
     .quiz-welcome p {
