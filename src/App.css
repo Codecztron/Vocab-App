@@ -17,10 +17,54 @@ body {
     min-height: 100vh;
     padding: 20px;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column; /* Stack header and content vertically */
+    align-items: center; /* Center horizontally */
 }
 
+.app-header {
+    width: 100%;
+    max-width: 1000px; /* Match app-content width */
+    background-color: white; /* Primary color for header */
+    color: #4a6baf;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    /* justify-content: right; /* Space between title and user info */
+    align-items: start; /* Vertically center items */
+    margin-bottom: 10px;
+}
+
+.app-title {
+    font-size: 28px;
+    margin: 0;
+}
+
+.header-user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: black;
+    font-size: 16px; /* Apply the font-size to the whole div */
+}
+
+.header-user-info span {
+    color: black;
+    animation: colorChange 5s infinite alternate; /* Animation for smooth color change */
+}
+
+@keyframes colorChange {
+    0% {
+        color: black;
+    }
+    50% {
+        color: #4a6baf;
+    } /* Blue color */
+    100% {
+        color: #e74c3c;
+    } /* Red color */
+}
 .app-content {
     width: 100%;
     max-width: 1000px;
@@ -28,14 +72,35 @@ body {
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    margin-top: 20px;
+    margin-top: 0; /* Remove top margin as header provides space */
 }
+@media (max-width: 768px) {
+    .app-container {
+        padding: 10px;
+    }
 
-.app-title {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #4a6baf;
-    font-size: 28px;
+    .app-header {
+        flex-direction: column; /* Stack title and user info on small screens */
+        align-items: flex-start; /* Align items to the start */
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+
+    .app-title {
+        font-size: 24px;
+        margin-bottom: 10px;
+        text-align: left; /* Align to the left */
+    }
+
+    .header-user-info {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .app-content {
+        padding: 15px;
+    }
 }
 
 /* Tabs */
@@ -374,85 +439,118 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    background-color: rgba(0, 0, 0, 0.7); /* Darker overlay */
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000; /* Ensure it's on top */
+    z-index: 10000; /* Ensure it's on top */
 }
 
 .custom-alert-content {
     background-color: #fff;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    padding: 35px; /* More padding */
+    border-radius: 18px; /* More rounded corners */
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25); /* Stronger shadow */
     text-align: center;
-    width: 90%;
-    max-width: 400px;
+    width: 95%;
+    max-width: 480px; /* Wider */
     position: relative;
+    border: 3px solid #e0e0e0; /* Wider border for better visual separation */
 }
 
 .custom-alert-content p {
-    font-size: 1.1rem;
-    margin-bottom: 20px;
-    color: #333;
+    font-size: 1.2rem; /* Slightly larger font size */
+    margin-bottom: 30px; /* More space */
+    color: #333; /* Darker text color */
+    line-height: 1.7; /* Improved readability */
 }
 
 .custom-alert-close-button {
     background-color: #4a6baf;
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
+    padding: 14px 30px; /* Larger button */
+    border-radius: 10px; /* More rounded corners */
     cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.3s;
+    font-size: 1.1rem; /* Slightly larger font size */
+    transition:
+        background-color 0.3s,
+        transform 0.2s,
+        box-shadow 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
 }
 
 .custom-alert-close-button:hover {
     background-color: #3a5590;
+    transform: translateY(-2px); /* Slight lift on hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25); /* Enhanced shadow on hover */
 }
 
 /* Alert type-specific styling */
 .custom-alert-overlay.success .custom-alert-content {
-    /* background-color: #d4edda; */
-    border: 2px solid #c3e6cb; /* Green border for success */
+    border-color: #66bb6a; /* Green border for success */
 }
 
 .custom-alert-overlay.success .custom-alert-content p {
-    color: #155724; /* Dark green text for success */
+    color: #388e3c; /* Dark green text for success */
+}
+
+.custom-alert-overlay.success .custom-alert-close-button {
+    background-color: #4caf50; /* Green button */
+}
+
+.custom-alert-overlay.success .custom-alert-close-button:hover {
+    background-color: #388e3c;
 }
 
 .custom-alert-overlay.error .custom-alert-content {
-    border: 2px solid #f5c6cb; /* Red border for error */
+    border-color: #ef9a9a; /* Red border for error */
 }
 
 .custom-alert-overlay.error .custom-alert-content p {
-    color: #721c24; /* Dark red text for error */
+    color: #d32f2f; /* Dark red text for error */
+}
+
+.custom-alert-overlay.error .custom-alert-close-button {
+    background-color: #f44336; /* Red button */
+}
+
+.custom-alert-overlay.error .custom-alert-close-button:hover {
+    background-color: #d32f2f;
 }
 
 .custom-alert-overlay.warning .custom-alert-content {
-    border: 2px solid #fff3cd; /* Yellow border for warning */
+    border-color: #ffb74d; /* Yellow border for warning */
 }
 
 .custom-alert-overlay.warning .custom-alert-content p {
-    color: #856404; /* Dark yellow/brown text for warning */
+    color: #f57c00; /* Dark yellow/brown text for warning */
+}
+
+.custom-alert-overlay.warning .custom-alert-close-button {
+    background-color: #ff9800; /* Orange button */
+    color: #fff; /* White text for orange button */
+}
+
+.custom-alert-overlay.warning .custom-alert-close-button:hover {
+    background-color: #f57c00;
 }
 
 /* Responsive adjustments */
 @media (max-width: 600px) {
-    .alert-container {
-        right: 10px;
-        left: 10px; /* Take full width on smaller screens */
-        width: auto; /* Allow the alert to adjust */
+    .custom-alert-content {
+        width: 95%; /* Take almost full width on smaller screens */
+        padding: 25px;
     }
-    .alert {
-        width: auto;
-        padding: 12px 15px;
-        font-size: 14px;
+
+    .custom-alert-content p {
+        font-size: 1.1rem; /* Slightly smaller font size */
+        margin-bottom: 25px;
     }
-    .alert-close-button {
-        font-size: 20px;
+
+    .custom-alert-close-button {
+        padding: 12px 24px;
+        font-size: 1rem;
     }
 }
 /* Buttons in Quiz Welcome */
@@ -958,20 +1056,6 @@ body {
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-    .app-container {
-        padding: 10px;
-    }
-
-    .app-content {
-        padding: 15px;
-        margin-top: 10px;
-    }
-
-    .app-title {
-        font-size: 24px;
-        margin-bottom: 15px;
-    }
-
     /* Responsive Tab Button Adjustments */
     .tab-list {
         margin-bottom: 15px; /* Reduce margin */

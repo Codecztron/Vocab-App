@@ -785,10 +785,10 @@ function App() {
         <div className="app-header">
           <h1 className="app-title">Vocab Quiz App</h1>
           {/* Consider adding user info/logout button here */}
-          {/* <div className="header-user-info">
-            <span>Welcome, {username}!</span>
-            <button onClick={handleLogout} className="secondary-button logout-button-header">Logout</button>
-          </div> */}
+          <div className="header-user-info">
+            Welcome,<span>{username}!</span>
+            {/* <button onClick={handleLogout} className="secondary-button logout-button-header">Logout</button> */}
+          </div>
         </div>
         {/* Manual Upload Section (shown only if logged in AND csv failed to load/parse) */}
         {!csvLoaded && isLoggedIn && !isLoading && (
@@ -905,8 +905,9 @@ function App() {
                 <div className="dev-info-tab card-style">
                   <h2 className="dev-title">Developer Info</h2>
                   <p className="dev-intro">
-                    Aplikasi ini dikembangkan oleh Andri Kusuma. Jangan ragu
-                    untuk terhubung atau mendukung developer!
+                    Aplikasi ini dikembangkan oleh Andri, dengan tujuan melatih
+                    vocab dengan metode quiz. Hubungi developer jika ada
+                    pertanyaan! Semoga bermanfaat.
                   </p>
                   <div className="dev-contact-grid">
                     <div className="dev-contact-item">
@@ -933,8 +934,8 @@ function App() {
                   <div className="dev-support-section">
                     <h3>Dukung Developer</h3>
                     <p>
-                      Jika Anda merasa aplikasi ini bermanfaat, pertimbangkan
-                      untuk mendukung pengembangannya:
+                      Jika Anda merasa aplikasi ini bermanfaat sangat amat
+                      diperbolehkan kok. Semoga rejeki lancar yaa!
                     </p>
                     <a
                       href="https://saweria.co/Codecztron"
@@ -942,7 +943,7 @@ function App() {
                       rel="noopener noreferrer"
                       className="dev-support-button primary-button"
                     >
-                      Dukung via Saweria ☕
+                      Donasi☕
                     </a>
                   </div>
                 </div>
