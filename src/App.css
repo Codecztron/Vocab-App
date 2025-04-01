@@ -1336,25 +1336,32 @@ body {
 
     /* Keep existing login responsive styles */
     .login-container {
-        padding: 30px;
-        width: 90%;
-        max-width: 350px;
-        margin: 30px auto;
+        padding: 20px !important;
+        width: auto;
+        max-width: 250px !important;
+        /* margin: 30px auto;    */
     }
 
     .login-container h2 {
-        font-size: 1.8rem;
+        font-size: 1.2rem !important;
+        margin-bottom: 10px !important;
     }
 
     .login-container p {
-        font-size: 0.95rem;
-        margin-bottom: 25px;
+        font-size: 0.75rem !important;
+        margin-bottom: 20px !important;
     }
 
     .login-container input,
     .login-container button {
-        padding: 12px;
-        font-size: 1rem;
+        padding: 10px !important;
+        font-size: 0.75rem !important;
+    }
+    .login-container input {
+        margin-bottom: 20px !important;
+    }
+    .login-container button {
+        margin: 0 !important;
     }
 
     /* REMOVED duplicated Developer Tab Responsive styles from here */
@@ -1368,8 +1375,15 @@ body {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     text-align: center;
     width: 350px;
-    margin: 50px auto;
     max-width: 90%; /* Ensure it doesn't exceed viewport width */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .login-container h2 {
