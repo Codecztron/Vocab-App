@@ -903,7 +903,58 @@ function App() {
                       </div>
                     </div>
                   </div>
-
+                  {/* Sorting Controls */}
+                  <div className="vocab-list-sort-controls card-style">
+                    <label htmlFor="sort-select" className="sort-label">
+                      Urutkan berdasarkan:
+                    </label>
+                    <select
+                      id="sort-select"
+                      className="sort-select"
+                      onChange={(e) => {
+                        // Implement sorting logic here based on e.target.value
+                        const sortBy = e.target.value;
+                        let sortedVocabList = [...vocabList];
+                        switch (sortBy) {
+                          case "english":
+                            sortedVocabList = [...vocabList].sort((a, b) =>
+                              a.english.localeCompare(b.english),
+                            );
+                            break;
+                          case "indonesian":
+                            sortedVocabList = [...vocabList].sort((a, b) =>
+                              a.indonesian.localeCompare(b.indonesian),
+                            );
+                            break;
+                          case "date":
+                            // Assuming you have a 'dateAdded' field, or can derive one
+                            // For now, since there's no date, it will sort based on ID which
+                            // is the order of insertion (most likely)
+                            sortedVocabList = [...vocabList].sort(
+                              (a, b) => a.id - b.id,
+                            ); // Sort by ID (chronological)
+                            break;
+                          case "mostRecent":
+                            // Since we're already using ID, and ID is chronological,
+                            // this does the same thing as 'date'
+                            sortedVocabList = [...vocabList].sort(
+                              (a, b) => b.id - a.id,
+                            ); // Sort by ID (reverse chronological)
+                            break;
+                          default:
+                            // No sorting or invalid option - keep the original order
+                            break;
+                        }
+                        setVocabList(sortedVocabList);
+                      }}
+                    >
+                      <option value="">Pilih</option>
+                      <option value="english">A - Z (Inggris)</option>
+                      <option value="indonesian">A - Z (Indonesia)</option>
+                      <option value="date">Tanggal Ditambahkan</option>
+                      <option value="mostRecent">Terbaru</option>
+                    </select>
+                  </div>
                   {vocabList.length > 0 ? (
                     <div className="vocab-table-container card-style">
                       <table className="vocab-table">
