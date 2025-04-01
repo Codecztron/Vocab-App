@@ -248,6 +248,45 @@ function App() {
 
   // Load CSV file dan data lainnya HANYA jika sudah login
   useEffect(() => {
+    // Check if the user is already logged in from local storage
+    const storedUsername = localStorage.getItem("username");
+    const storedIsLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    const storedVocabList = localStorage.getItem("vocabList");
+    const storedSavedVocabs = localStorage.getItem("savedVocabs");
+    const storedCsvLoaded = localStorage.getItem("csvLoaded") === "true";
+    const storedActiveTab = localStorage.getItem("activeTab") || "list";
+
+    if (storedIsLoggedIn && storedUsername) {
+      setUsername(storedUsername);
+      setIsLoggedIn(true);
+    }
+
+    if (storedVocabList) {
+      try {
+        setVocabList(JSON.parse(storedVocabList));
+      } catch (error) {
+        console.error("Error parsing vocabList from localStorage:", error);
+        localStorage.removeItem("vocabList");
+        setVocabList([]);
+      }
+    }
+
+    if (storedSavedVocabs) {
+      try {
+        setSavedVocabs(JSON.parse(storedSavedVocabs));
+      } catch (error) {
+        console.error("Error parsing savedVocabs from localStorage:", error);
+        localStorage.removeItem("savedVocabs");
+        setSavedVocabs([]);
+      }
+    }
+
+    if (storedCsvLoaded) {
+      setCsvLoaded(storedCsvLoaded);
+    }
+
+    setActiveTab(storedActiveTab);
+
     if (isLoggedIn) {
       setIsLoading(true); // Set loading true when starting to load data
       // Load CSV file
@@ -266,7 +305,11 @@ function App() {
         }
       };
 
-      loadData();
+      if (!vocabList.length || !csvLoaded) {
+        loadData();
+      } else {
+        setIsLoading(false);
+      }
 
       // Load saved data from localStorage
       const saved = localStorage.getItem("learnedVocabs");
@@ -293,7 +336,7 @@ function App() {
     } else {
       setIsLoading(false); // Don't show loading if not logged in
     }
-  }, [isLoggedIn, parseCSV]); // Effect depends on isLoggedIn
+  }, [isLoggedIn, parseCSV, vocabList.length, csvLoaded]); // Effect depends on isLoggedIn, parseCSV, vocabList.length, and csvLoaded
 
   // Handle manual file upload
   const handleFileUpload = (event) => {
@@ -328,6 +371,23 @@ function App() {
       }
     }
   }, [savedVocabs, isLoggedIn, vocabList.length]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      try {
+        localStorage.setItem("vocabList", JSON.stringify(vocabList));
+        localStorage.setItem("savedVocabs", JSON.stringify(savedVocabs));
+        localStorage.setItem("csvLoaded", csvLoaded);
+        localStorage.setItem("activeTab", activeTab);
+      } catch (error) {
+        console.error("Error saving data to localStorage:", error);
+        showAlert(
+          "Gagal menyimpan data. Penyimpanan lokal mungkin penuh atau rusak.",
+          "error",
+        );
+      }
+    }
+  }, [vocabList, savedVocabs, csvLoaded, activeTab, isLoggedIn]);
 
   // Toggle learned status for a single vocabulary item
   const toggleLearned = (id) => {
@@ -573,6 +633,8 @@ function App() {
 
     if (username === expectedUsername && password === expectedPassword) {
       setIsLoggedIn(true);
+      localStorage.setItem("username", username); // Save username to local storage
+      localStorage.setItem("isLoggedIn", "true"); // Save login status to local storage
     } else {
       setIsLoggedIn(false);
       setLoginError("Username atau password salah.");
@@ -603,6 +665,13 @@ function App() {
     setUsername("");
     setPassword("");
     setLoginError(null);
+
+    localStorage.removeItem("username"); // Remove username from local storage
+    localStorage.removeItem("isLoggedIn"); // Remove login status from local storage
+    localStorage.removeItem("vocabList");
+    localStorage.removeItem("savedVocabs");
+    localStorage.removeItem("csvLoaded");
+    localStorage.removeItem("activeTab");
   };
 
   // ---------- RENDER LOGIC ----------
@@ -650,7 +719,7 @@ function App() {
           />
         )}
         <div className="login-box card-style">
-          <h2 className="login-title">Vocab App Login</h2>
+          <h2 className="login-title">Vocab App</h2>
           <p className="login-info">
             Hubungi{" "}
             <a
@@ -921,9 +990,19 @@ function App() {
                               a.english.localeCompare(b.english),
                             );
                             break;
+                          case "englishZtoA":
+                            sortedVocabList = [...vocabList].sort((a, b) =>
+                              b.english.localeCompare(a.english),
+                            );
+                            break;
                           case "indonesian":
                             sortedVocabList = [...vocabList].sort((a, b) =>
                               a.indonesian.localeCompare(b.indonesian),
+                            );
+                            break;
+                          case "indonesianZtoA":
+                            sortedVocabList = [...vocabList].sort((a, b) =>
+                              b.indonesian.localeCompare(a.indonesian),
                             );
                             break;
                           case "date":
@@ -949,10 +1028,12 @@ function App() {
                       }}
                     >
                       <option value="">Pilih</option>
-                      <option value="english">A - Z (Inggris)</option>
-                      <option value="indonesian">A - Z (Indonesia)</option>
-                      <option value="date">Tanggal Ditambahkan</option>
                       <option value="mostRecent">Terbaru</option>
+                      <option value="date">Tanggal Ditambahkan</option>
+                      <option value="english">A - Z (Inggris)</option>
+                      <option value="englishZtoA">Z - A (Inggris)</option>
+                      <option value="indonesian">A - Z (Indonesia)</option>
+                      <option value="indonesianZtoA">Z - A (Indonesia)</option>
                     </select>
                   </div>
                   {vocabList.length > 0 ? (
