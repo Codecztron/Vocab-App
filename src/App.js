@@ -136,6 +136,7 @@ function App() {
   const [showReview, setShowReview] = useState(false);
   const [selectedReviewQuestionIndex, setSelectedReviewQuestionIndex] =
     useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false); // State untuk status login
   const [username, setUsername] = useState(""); // State untuk input username
   const [password, setPassword] = useState(""); // State untuk input password
@@ -674,8 +675,46 @@ function App() {
     localStorage.removeItem("activeTab");
   };
 
+  // Tambahkan fungsi ini ke dalam komponen Anda
+  const getFilteredVocabList = () => {
+    if (!searchTerm || searchTerm.trim() === "") {
+      return vocabList;
+    }
+
+    return vocabList.filter(
+      (vocab) =>
+        vocab.english.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vocab.indonesian.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  };
+
   // ---------- RENDER LOGIC ----------
 
+  const HighlightText = ({ text, highlight }) => {
+    if (!highlight.trim()) {
+      return <span>{text}</span>;
+    }
+
+    const regex = new RegExp(
+      `(${highlight.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+      "gi",
+    );
+    const parts = text.split(regex);
+
+    return (
+      <span>
+        {parts.map((part, i) =>
+          regex.test(part) ? (
+            <span key={i} className="highlight-match">
+              {part}
+            </span>
+          ) : (
+            <span key={i}>{part}</span>
+          ),
+        )}
+      </span>
+    );
+  };
   // Loading state UI (only show if logged in and loading)
   if (isLoading && isLoggedIn) {
     return (
@@ -972,73 +1011,172 @@ function App() {
                       </div>
                     </div>
                   </div>
-                  {/* Sorting Controls */}
-                  <div className="vocab-list-sort-controls card-style">
-                    <label htmlFor="sort-select" className="sort-label">
-                      Urutkan berdasarkan:
-                    </label>
-                    <select
-                      id="sort-select"
-                      className="sort-select"
-                      onChange={(e) => {
-                        // Implement sorting logic here based on e.target.value
-                        const sortBy = e.target.value;
-                        let sortedVocabList = [...vocabList];
-                        switch (sortBy) {
-                          case "english":
-                            sortedVocabList = [...vocabList].sort((a, b) =>
-                              a.english.localeCompare(b.english),
-                            );
-                            break;
-                          case "englishZtoA":
-                            sortedVocabList = [...vocabList].sort((a, b) =>
-                              b.english.localeCompare(a.english),
-                            );
-                            break;
-                          case "indonesian":
-                            sortedVocabList = [...vocabList].sort((a, b) =>
-                              a.indonesian.localeCompare(b.indonesian),
-                            );
-                            break;
-                          case "indonesianZtoA":
-                            sortedVocabList = [...vocabList].sort((a, b) =>
-                              b.indonesian.localeCompare(a.indonesian),
-                            );
-                            break;
-                          case "date":
-                            // Assuming you have a 'dateAdded' field, or can derive one
-                            // For now, since there's no date, it will sort based on ID which
-                            // is the order of insertion (most likely)
-                            sortedVocabList = [...vocabList].sort(
-                              (a, b) => a.id - b.id,
-                            ); // Sort by ID (chronological)
-                            break;
-                          case "mostRecent":
-                            // Since we're already using ID, and ID is chronological,
-                            // this does the same thing as 'date'
-                            sortedVocabList = [...vocabList].sort(
-                              (a, b) => b.id - a.id,
-                            ); // Sort by ID (reverse chronological)
-                            break;
-                          default:
-                            // No sorting or invalid option - keep the original order
-                            break;
-                        }
-                        setVocabList(sortedVocabList);
-                      }}
-                    >
-                      <option value="">Pilih</option>
-                      <option value="mostRecent">Terbaru</option>
-                      <option value="date">Tanggal Ditambahkan</option>
-                      <option value="english">A - Z (Inggris)</option>
-                      <option value="englishZtoA">Z - A (Inggris)</option>
-                      <option value="indonesian">A - Z (Indonesia)</option>
-                      <option value="indonesianZtoA">Z - A (Indonesia)</option>
-                    </select>
+
+                  {/* Modern Search Component */}
+                  <div className="search-and-filter-container">
+                    <div className="modern-search-container card-style">
+                      <div className="search-icon">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M21 21L16.65 16.65"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </div>
+                      <input
+                        type="text"
+                        className="modern-search-input"
+                        placeholder="Cari kosakata Inggris atau Indonesia..."
+                        value={searchTerm || ""}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                        }}
+                      />
+                      {searchTerm && (
+                        <button
+                          className="modern-clear-button"
+                          onClick={() => {
+                            setSearchTerm("");
+                          }}
+                          aria-label="Clear search"
+                        >
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M18 6L6 18"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M6 6L18 18"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Sorting Controls - Redesigned */}
+                    <div className="modern-sort-controls card-style">
+                      <label
+                        htmlFor="sort-select"
+                        className="modern-sort-label"
+                      >
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M4 6H20M4 12H14M4 18H8"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        Urutkan
+                      </label>
+                      <select
+                        id="sort-select"
+                        className="modern-sort-select"
+                        onChange={(e) => {
+                          const sortBy = e.target.value;
+                          let sortedVocabList = [...vocabList];
+                          switch (sortBy) {
+                            case "english":
+                              sortedVocabList = [...vocabList].sort((a, b) =>
+                                a.english.localeCompare(b.english),
+                              );
+                              break;
+                            case "englishZtoA":
+                              sortedVocabList = [...vocabList].sort((a, b) =>
+                                b.english.localeCompare(a.english),
+                              );
+                              break;
+                            case "indonesian":
+                              sortedVocabList = [...vocabList].sort((a, b) =>
+                                a.indonesian.localeCompare(b.indonesian),
+                              );
+                              break;
+                            case "indonesianZtoA":
+                              sortedVocabList = [...vocabList].sort((a, b) =>
+                                b.indonesian.localeCompare(a.indonesian),
+                              );
+                              break;
+                            case "date":
+                              sortedVocabList = [...vocabList].sort(
+                                (a, b) => a.id - b.id,
+                              );
+                              break;
+                            case "mostRecent":
+                              sortedVocabList = [...vocabList].sort(
+                                (a, b) => b.id - a.id,
+                              );
+                              break;
+                            default:
+                              break;
+                          }
+                          setVocabList(sortedVocabList);
+                        }}
+                      >
+                        <option value="">Pilih Urutan</option>
+                        <option value="mostRecent">Terbaru</option>
+                        <option value="date">Tanggal Ditambahkan</option>
+                        <option value="english">A - Z (Inggris)</option>
+                        <option value="englishZtoA">Z - A (Inggris)</option>
+                        <option value="indonesian">A - Z (Indonesia)</option>
+                        <option value="indonesianZtoA">
+                          Z - A (Indonesia)
+                        </option>
+                      </select>
+                    </div>
                   </div>
-                  {vocabList.length > 0 ? (
-                    <div className="vocab-table-container card-style">
-                      <table className="vocab-table">
+
+                  {/* Search Results Info */}
+                  {searchTerm && (
+                    <div className="search-results-info card-style">
+                      <div className="results-count">
+                        <span className="results-highlight">
+                          {getFilteredVocabList().length}
+                        </span>{" "}
+                        dari {vocabList.length} kosakata ditemukan untuk "
+                        <span className="search-term">{searchTerm}</span>"
+                      </div>
+                    </div>
+                  )}
+
+                  {getFilteredVocabList().length > 0 ? (
+                    <div className="modern-vocab-table-container card-style">
+                      <table className="modern-vocab-table">
                         <thead>
                           <tr>
                             <th className="col-english">Inggris</th>
@@ -1047,16 +1185,34 @@ function App() {
                           </tr>
                         </thead>
                         <tbody>
-                          {vocabList.map((vocab) => (
+                          {getFilteredVocabList().map((vocab) => (
                             <tr
                               key={vocab.id}
                               className={vocab.learned ? "learned-row" : ""}
                             >
-                              <td className="vocab-english">{vocab.english}</td>
-                              <td>{vocab.indonesian}</td>
+                              <td className="vocab-english">
+                                {searchTerm ? (
+                                  <HighlightText
+                                    text={vocab.english}
+                                    highlight={searchTerm}
+                                  />
+                                ) : (
+                                  vocab.english
+                                )}
+                              </td>
+                              <td className="vocab-indonesian">
+                                {searchTerm ? (
+                                  <HighlightText
+                                    text={vocab.indonesian}
+                                    highlight={searchTerm}
+                                  />
+                                ) : (
+                                  vocab.indonesian
+                                )}
+                              </td>
                               <td className="vocab-status">
                                 <label
-                                  className="checkbox-container"
+                                  className="modern-checkbox-container"
                                   title={
                                     vocab.learned
                                       ? "Tandai sebagai belum hafal"
@@ -1068,7 +1224,25 @@ function App() {
                                     checked={vocab.learned}
                                     onChange={() => toggleLearned(vocab.id)}
                                   />
-                                  <span className="checkmark"></span>
+                                  <span className="modern-checkmark">
+                                    {vocab.learned && (
+                                      <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          d="M20 6L9 17L4 12"
+                                          stroke="white"
+                                          strokeWidth="3"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                      </svg>
+                                    )}
+                                  </span>
                                 </label>
                               </td>
                             </tr>
@@ -1077,16 +1251,73 @@ function App() {
                       </table>
                     </div>
                   ) : (
-                    <div className="card-style empty-list-message">
-                      <p>
-                        Daftar kosakata kosong. Jika Anda baru saja mengunggah
-                        file, pastikan formatnya benar ('Inggris;Indonesia') dan
-                        file tidak kosong.
-                      </p>
+                    <div className="modern-empty-state card-style">
+                      {searchTerm ? (
+                        <>
+                          <div className="empty-icon">
+                            <svg
+                              width="64"
+                              height="64"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M10 10L14 14M14 10L10 14M19 19L14.65 14.65M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </div>
+                          <p className="empty-title">
+                            Tidak ada hasil ditemukan
+                          </p>
+                          <p className="empty-description">
+                            Tidak ditemukan kosakata untuk "
+                            <strong>{searchTerm}</strong>". Coba dengan kata
+                            kunci lain atau periksa ejaan Anda.
+                          </p>
+                          <button
+                            className="reset-search-button"
+                            onClick={() => setSearchTerm("")}
+                          >
+                            Reset Pencarian
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="empty-icon">
+                            <svg
+                              width="64"
+                              height="64"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M12 8V12M12 16H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </div>
+                          <p className="empty-title">Daftar kosakata kosong</p>
+                          <p className="empty-description">
+                            Jika Anda baru saja mengunggah file, pastikan
+                            formatnya benar ('Inggris;Indonesia') dan file tidak
+                            kosong.
+                          </p>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
               )}
+
               {/* Quiz Tab */}
               {activeTab === "quiz" && (
                 <div className="quiz-tab">
@@ -1151,7 +1382,7 @@ function App() {
                           >
                             {questionsRemaining > 0
                               ? "Soal Berikutnya →"
-                              : "Lihat Hasil Akhir"}
+                              : "Hasil Akhir"}
                           </button>
                         </div>
                       )}
@@ -1185,7 +1416,7 @@ function App() {
                                   className="secondary-button"
                                   disabled={quizHistory.length === 0}
                                 >
-                                  Lihat Review Soal ({quizHistory.length})
+                                  Review Soal ({quizHistory.length})
                                 </button>
                                 <button
                                   onClick={restartQuiz}
@@ -1202,7 +1433,7 @@ function App() {
                                   onClick={() => setActiveTab("list")}
                                   className="secondary-button"
                                 >
-                                  Kembali ke Daftar Kosakata
+                                  Daftar Kosakata
                                 </button>
                               </div>
                             </div>
@@ -1219,7 +1450,7 @@ function App() {
                                     key={index}
                                     className={`minimap-button ${selectedReviewQuestionIndex === index ? "active" : ""} ${historyItem.isCorrect ? "correct" : "wrong"}`}
                                     onClick={() => handleMinimapClick(index)}
-                                    title={`Lihat Soal ${index + 1} (${historyItem.isCorrect ? "Benar" : "Salah"})`}
+                                    title={`Soal ${index + 1} (${historyItem.isCorrect ? "Benar" : "Salah"})`}
                                   >
                                     {index + 1}
                                   </button>
@@ -1273,7 +1504,7 @@ function App() {
                                           </p>
                                           <details className="review-options-details">
                                             <summary>
-                                              Lihat Semua Pilihan Soal Ini
+                                              Semua Pilihan Soal Ini
                                             </summary>
                                             <ul className="review-options-list">
                                               {historyItem.options.map(
@@ -1323,7 +1554,7 @@ function App() {
                                   onClick={toggleReview}
                                   className="secondary-button close-review-button"
                                 >
-                                  Kembali ke Hasil Quiz
+                                  Hasil Quiz
                                 </button>
                                 <button
                                   onClick={restartQuiz}
@@ -1334,13 +1565,13 @@ function App() {
                                       : "Mulai Ulang Quiz"
                                   }
                                 >
-                                  Mulai Ulang Quiz
+                                  Mulai Ulang
                                 </button>
                                 <button
                                   onClick={() => setActiveTab("list")}
                                   className="secondary-button"
                                 >
-                                  Kembali ke Daftar Kosakata
+                                  Daftar Kosakata
                                 </button>
                               </div>
                             </div>
@@ -1388,7 +1619,7 @@ function App() {
                               onClick={() => setActiveTab("list")}
                               className="secondary-button"
                             >
-                              Kembali ke Daftar Kosakata
+                              Daftar Kosakata
                             </button>
                           </div>
 
