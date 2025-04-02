@@ -1,5 +1,5 @@
 // App.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Papa from "papaparse";
 import "./App.css"; // Assuming App.css contains styles for .custom-alert, .custom-alert-content, .custom-alert-close-button
 
@@ -13,6 +13,104 @@ function CustomAlert({ message, type = "info", onClose }) {
         <p>{message}</p>
         <button onClick={onClose} className="custom-alert-close-button">
           OK
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// VocabInputFields Component (moved to a separate component)
+function VocabInputFields({ vocabList, setVocabList }) {
+  const [newVocabs, setNewVocabs] = useState([{ english: "", indonesian: "" }]);
+
+  const handleInputChange = (index, field, value) => {
+    setNewVocabs((prevVocabs) => {
+      const updatedVocabs = [...prevVocabs];
+      updatedVocabs[index][field] = value;
+      return updatedVocabs;
+    });
+  };
+
+  const handleAddVocabField = () => {
+    setNewVocabs((prevVocabs) => [
+      ...prevVocabs,
+      { english: "", indonesian: "" },
+    ]);
+  };
+
+  const handleRemoveVocabField = (index) => {
+    setNewVocabs((prevVocabs) => {
+      const updatedVocabs = [...prevVocabs];
+      updatedVocabs.splice(index, 1);
+      return updatedVocabs;
+    });
+  };
+
+  const handleSaveVocabs = () => {
+    const validVocabs = newVocabs.filter(
+      (vocab) => vocab.english.trim() && vocab.indonesian.trim(),
+    );
+
+    if (validVocabs.length === 0) {
+      return;
+    }
+
+    const newVocabItems = validVocabs.map((vocab, index) => ({
+      id: vocabList.length + index,
+      english: vocab.english.trim(),
+      indonesian: vocab.indonesian.trim(),
+      learned: false,
+    }));
+
+    setVocabList((prevVocabList) => [...prevVocabList, ...newVocabItems]);
+    setNewVocabs([{ english: "", indonesian: "" }]);
+  };
+
+  return (
+    <div>
+      {newVocabs.map((vocab, index) => (
+        <div key={index} className="vocab-input-group">
+          <input
+            type="text"
+            placeholder="English"
+            value={vocab.english}
+            onChange={(e) =>
+              handleInputChange(index, "english", e.target.value)
+            }
+          />
+          <input
+            type="text"
+            placeholder="Indonesia"
+            value={vocab.indonesian}
+            onChange={(e) =>
+              handleInputChange(index, "indonesian", e.target.value)
+            }
+          />
+          {newVocabs.length > 1 && (
+            <button
+              type="button"
+              onClick={() => handleRemoveVocabField(index)}
+              className="remove-vocab-button"
+            >
+              -
+            </button>
+          )}
+        </div>
+      ))}
+      <div className="vocab-input-actions">
+        <button
+          type="button"
+          onClick={handleAddVocabField}
+          className="add-vocab-button"
+        >
+          + Tambah Kosakata
+        </button>
+        <button
+          type="button"
+          onClick={handleSaveVocabs}
+          className="primary-button save-vocab-button"
+        >
+          Simpan Kosakata
         </button>
       </div>
     </div>
@@ -38,6 +136,7 @@ function App() {
   const [showReview, setShowReview] = useState(false);
   const [selectedReviewQuestionIndex, setSelectedReviewQuestionIndex] =
     useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false); // State untuk status login
   const [username, setUsername] = useState(""); // State untuk input username
   const [password, setPassword] = useState(""); // State untuk input password
@@ -58,58 +157,8 @@ function App() {
     setCustomAlert({ show: false, message: "", type: "info" });
   };
 
-  // Load CSV file dan data lainnya HANYA jika sudah login
-  useEffect(() => {
-    if (isLoggedIn) {
-      setIsLoading(true); // Set loading true when starting to load data
-      // Load CSV file
-      fetch("/data.csv")
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("CSV file not found");
-          }
-          return response.text();
-        })
-        .then((csvText) => {
-          parseCSV(csvText);
-          setCsvLoaded(true);
-        })
-        .catch((error) => {
-          console.error("Error loading CSV:", error);
-          // Optionally show an alert here too
-          // showAlert("Gagal memuat file CSV. Coba unggah manual.", "error");
-          setIsLoading(false); // Stop loading indicator on fetch error
-        });
-
-      // Load saved data from localStorage
-      const saved = localStorage.getItem("learnedVocabs");
-      if (saved) {
-        try {
-          const parsedSaved = JSON.parse(saved);
-          if (Array.isArray(parsedSaved)) {
-            setSavedVocabs(parsedSaved);
-          } else {
-            console.warn(
-              "Invalid data found in localStorage for learnedVocabs. Resetting.",
-            );
-            localStorage.removeItem("learnedVocabs");
-            setSavedVocabs([]);
-          }
-        } catch (e) {
-          console.error("Error parsing learnedVocabs from localStorage:", e);
-          localStorage.removeItem("learnedVocabs");
-          setSavedVocabs([]);
-        }
-      } else {
-        setSavedVocabs([]); // Initialize as empty array if nothing is saved
-      }
-    } else {
-      setIsLoading(false); // Don't show loading if not logged in
-    }
-  }, [isLoggedIn]); // Effect depends on isLoggedIn
-
   // Parse CSV data
-  const parseCSV = (csvText) => {
+  const parseCSV = useCallback((csvText) => {
     Papa.parse(csvText, {
       delimiter: ";",
       complete: (results) => {
@@ -155,13 +204,13 @@ function App() {
         // Retrieve saved vocabs again AFTER parsing to apply learned status
         const saved = localStorage.getItem("learnedVocabs");
         let initialVocabList = data;
-        let loadedSavedVocabIds = [];
+        // let loadedSavedVocabIds = []; // This variable was unused, so it's removed.
 
         if (saved) {
           try {
             const parsedSaved = JSON.parse(saved);
             if (Array.isArray(parsedSaved)) {
-              loadedSavedVocabIds = parsedSaved; // Store the parsed IDs
+              // loadedSavedVocabIds = parsedSaved; // This was commented out.  Removed as well
               initialVocabList = data.map((vocab) => ({
                 ...vocab,
                 // Ensure ID types match if necessary (assuming vocab.id is number, saved IDs are numbers)
@@ -196,7 +245,99 @@ function App() {
       },
       skipEmptyLines: true, // Skip empty lines during parsing
     });
-  };
+  }, []);
+
+  // Load CSV file dan data lainnya HANYA jika sudah login
+  useEffect(() => {
+    // Check if the user is already logged in from local storage
+    const storedUsername = localStorage.getItem("username");
+    const storedIsLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    const storedVocabList = localStorage.getItem("vocabList");
+    const storedSavedVocabs = localStorage.getItem("savedVocabs");
+    const storedCsvLoaded = localStorage.getItem("csvLoaded") === "true";
+    const storedActiveTab = localStorage.getItem("activeTab") || "list";
+
+    if (storedIsLoggedIn && storedUsername) {
+      setUsername(storedUsername);
+      setIsLoggedIn(true);
+    }
+
+    if (storedVocabList) {
+      try {
+        setVocabList(JSON.parse(storedVocabList));
+      } catch (error) {
+        console.error("Error parsing vocabList from localStorage:", error);
+        localStorage.removeItem("vocabList");
+        setVocabList([]);
+      }
+    }
+
+    if (storedSavedVocabs) {
+      try {
+        setSavedVocabs(JSON.parse(storedSavedVocabs));
+      } catch (error) {
+        console.error("Error parsing savedVocabs from localStorage:", error);
+        localStorage.removeItem("savedVocabs");
+        setSavedVocabs([]);
+      }
+    }
+
+    if (storedCsvLoaded) {
+      setCsvLoaded(storedCsvLoaded);
+    }
+
+    setActiveTab(storedActiveTab);
+
+    if (isLoggedIn) {
+      setIsLoading(true); // Set loading true when starting to load data
+      // Load CSV file
+      const loadData = async () => {
+        try {
+          const response = await fetch("/data.csv");
+          if (!response.ok) {
+            throw new Error("CSV file not found");
+          }
+          const csvText = await response.text();
+          parseCSV(csvText);
+          setCsvLoaded(true);
+        } catch (error) {
+          console.error("Error loading CSV:", error);
+          setIsLoading(false);
+        }
+      };
+
+      if (!vocabList.length || !csvLoaded) {
+        loadData();
+      } else {
+        setIsLoading(false);
+      }
+
+      // Load saved data from localStorage
+      const saved = localStorage.getItem("learnedVocabs");
+      if (saved) {
+        try {
+          const parsedSaved = JSON.parse(saved);
+          if (Array.isArray(parsedSaved)) {
+            setSavedVocabs(parsedSaved);
+          } else {
+            console.warn(
+              "Invalid data found in localStorage for learnedVocabs. Resetting.",
+            );
+            localStorage.removeItem("learnedVocabs");
+            setSavedVocabs([]);
+          }
+        } catch (e) {
+          console.error("Error parsing learnedVocabs from localStorage:", e);
+          localStorage.removeItem("learnedVocabs");
+          setSavedVocabs([]);
+        }
+      } else {
+        setSavedVocabs([]); // Initialize as empty array if nothing is saved
+      }
+    } else {
+      setIsLoading(false); // Don't show loading if not logged in
+    }
+  }, [isLoggedIn, parseCSV, vocabList.length, csvLoaded]); // Effect depends on isLoggedIn, parseCSV, vocabList.length, and csvLoaded
 
   // Handle manual file upload
   const handleFileUpload = (event) => {
@@ -207,7 +348,6 @@ function App() {
       reader.onload = (e) => {
         parseCSV(e.target.result);
         setCsvLoaded(true); // Mark as loaded after successful parse attempt
-        // setIsLoading(false) is handled within parseCSV
       };
       reader.onerror = (e) => {
         console.error("Error reading file:", e);
@@ -220,8 +360,6 @@ function App() {
 
   // Save learned vocabs to localStorage whenever savedVocabs changes
   useEffect(() => {
-    // Only save if vocabList has been populated (implies CSV loaded/parsed)
-    // And only save if logged in (though this check might be redundant if state resets on logout)
     if (isLoggedIn && vocabList.length > 0) {
       try {
         localStorage.setItem("learnedVocabs", JSON.stringify(savedVocabs));
@@ -233,33 +371,41 @@ function App() {
         );
       }
     }
-    // Removed vocabList.length dependency as saving an empty array is valid
   }, [savedVocabs, isLoggedIn, vocabList.length]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      try {
+        localStorage.setItem("vocabList", JSON.stringify(vocabList));
+        localStorage.setItem("savedVocabs", JSON.stringify(savedVocabs));
+        localStorage.setItem("csvLoaded", csvLoaded);
+        localStorage.setItem("activeTab", activeTab);
+      } catch (error) {
+        console.error("Error saving data to localStorage:", error);
+        showAlert(
+          "Gagal menyimpan data. Penyimpanan lokal mungkin penuh atau rusak.",
+          "error",
+        );
+      }
+    }
+  }, [vocabList, savedVocabs, csvLoaded, activeTab, isLoggedIn]);
 
   // Toggle learned status for a single vocabulary item
   const toggleLearned = (id) => {
-    let isNowLearned;
-    // Update the main vocabList state first
-    setVocabList(
-      vocabList.map((vocab) => {
-        if (vocab.id === id) {
-          isNowLearned = !vocab.learned; // Determine the new status
-          return { ...vocab, learned: isNowLearned };
-        }
-        return vocab;
-      }),
+    setVocabList((prevVocabList) =>
+      prevVocabList.map((vocab) =>
+        vocab.id === id ? { ...vocab, learned: !vocab.learned } : vocab,
+      ),
     );
-
-    // Update the savedVocabs (list of IDs) state based on the new status
-    if (isNowLearned) {
-      // Add the ID if it's not already there (safety check)
-      if (!savedVocabs.includes(id)) {
-        setSavedVocabs([...savedVocabs, id]);
+    setSavedVocabs((prevSavedVocabs) => {
+      const isLearned = vocabList.find((vocab) => vocab.id === id)?.learned;
+      if (isLearned) {
+        return prevSavedVocabs.filter((vocabId) => vocabId !== id);
       }
-    } else {
-      // Remove the ID
-      setSavedVocabs(savedVocabs.filter((vocabId) => vocabId !== id));
-    }
+      return prevSavedVocabs.includes(id)
+        ? prevSavedVocabs
+        : [...prevSavedVocabs, id];
+    });
   };
 
   // Toggle learned status for all vocabulary items
@@ -267,81 +413,38 @@ function App() {
     const allCurrentlyLearned = vocabList.every((vocab) => vocab.learned);
     const targetLearnedStatus = !allCurrentlyLearned;
 
-    // Update the main vocabList
-    const updatedVocabList = vocabList.map((vocab) => ({
-      ...vocab,
-      learned: targetLearnedStatus,
-    }));
-    setVocabList(updatedVocabList);
+    setVocabList((prevVocabList) =>
+      prevVocabList.map((vocab) => ({
+        ...vocab,
+        learned: targetLearnedStatus,
+      })),
+    );
 
-    // Update the savedVocabs list accordingly
-    const updatedSavedVocabs = targetLearnedStatus
-      ? updatedVocabList.map((vocab) => vocab.id) // All IDs if marking all as learned
-      : []; // Empty array if marking all as not learned
-    setSavedVocabs(updatedSavedVocabs);
+    setSavedVocabs(
+      targetLearnedStatus ? vocabList.map((vocab) => vocab.id) : [],
+    );
   };
 
   // Start quiz
   const startQuiz = () => {
-    // Filter based on the 'learned' property which should be in sync with savedVocabs
     const learnedVocabs = vocabList.filter((vocab) => vocab.learned);
 
-    // Use the derived list length for the check
     if (learnedVocabs.length < 4) {
       showAlert(
         'Anda perlu menandai minimal 4 kosakata sebagai "sudah dihafal" untuk memulai quiz!',
         "warning",
       );
-      return; // Stop if not enough words
+      return;
     }
 
-    // Shuffle the learned vocabs for the quiz order
     const shuffledLearnedVocabs = [...learnedVocabs].sort(
       () => Math.random() - 0.5,
     );
 
-    // Reset quiz state comprehensively
     setQuizVocabs(shuffledLearnedVocabs);
     setQuestionsRemaining(shuffledLearnedVocabs.length);
     setScore(0);
-    setTotalQuestions(0); // Reset count of questions *answered* in this session
-    setQuizHistory([]);
-    setShowResult(false); // Ensure no lingering result display from previous question
-    setSelectedOption(null); // Ensure no lingering selection
-    setIsCorrect(false); // Ensure no lingering correctness status
-    setShowReview(false); // Hide review view if it was open
-    setSelectedReviewQuestionIndex(null); // Reset review index
-
-    // Generate the first question using the freshly shuffled list
-    generateQuestion(shuffledLearnedVocabs);
-
-    // Switch to the quiz tab automatically when starting
-    setActiveTab("quiz"); // Ensure the user sees the quiz interface
-  };
-
-  // Restart Quiz
-  const restartQuiz = () => {
-    // Re-filter learned vocabs in case changes were made
-    const learnedVocabs = vocabList.filter((vocab) => vocab.learned);
-
-    if (learnedVocabs.length < 4) {
-      showAlert(
-        'Tidak cukup kosakata yang ditandai "sudah dihafal" (minimal 4) untuk memulai ulang quiz.',
-        "warning",
-      );
-      // Do not switch tab, just show alert
-      return; // Stop the restart process
-    }
-    // Re-shuffle for the new quiz session
-    const shuffledLearnedVocabs = [...learnedVocabs].sort(
-      () => Math.random() - 0.5,
-    );
-
-    // Reset quiz state (similar to startQuiz)
-    setQuizVocabs(shuffledLearnedVocabs);
-    setQuestionsRemaining(shuffledLearnedVocabs.length);
-    setScore(0);
-    setTotalQuestions(0); // Reset total questions for the new session
+    setTotalQuestions(0);
     setQuizHistory([]);
     setShowResult(false);
     setSelectedOption(null);
@@ -349,49 +452,63 @@ function App() {
     setShowReview(false);
     setSelectedReviewQuestionIndex(null);
 
-    // Generate the first question from the new list
     generateQuestion(shuffledLearnedVocabs);
+    setActiveTab("quiz");
+  };
 
-    // No need to switch tab, already on quiz tab
+  // Restart Quiz
+  const restartQuiz = () => {
+    const learnedVocabs = vocabList.filter((vocab) => vocab.learned);
+
+    if (learnedVocabs.length < 4) {
+      showAlert(
+        'Tidak cukup kosakata yang ditandai "sudah dihafal" (minimal 4) untuk memulai ulang quiz.',
+        "warning",
+      );
+      return;
+    }
+    const shuffledLearnedVocabs = [...learnedVocabs].sort(
+      () => Math.random() - 0.5,
+    );
+
+    setQuizVocabs(shuffledLearnedVocabs);
+    setQuestionsRemaining(shuffledLearnedVocabs.length);
+    setScore(0);
+    setTotalQuestions(0);
+    setQuizHistory([]);
+    setShowResult(false);
+    setSelectedOption(null);
+    setIsCorrect(false);
+    setShowReview(false);
+    setSelectedReviewQuestionIndex(null);
+
+    generateQuestion(shuffledLearnedVocabs);
   };
 
   // Generate a new question
-  // Accepts the current list of vocabs remaining in the quiz as an argument
   const generateQuestion = (currentQuizVocabList = quizVocabs) => {
-    // Check state for remaining questions first
     if (questionsRemaining <= 0) {
-      setCurrentQuestion(null); // No more questions left
-      setShowResult(false); // Ensure result display is off
+      setCurrentQuestion(null);
+      setShowResult(false);
       setSelectedOption(null);
-      return; // Exit generation
+      return;
     }
 
-    // Use the passed list or the state list (passed list is usually more up-to-date)
     const vocabsToUse = currentQuizVocabList;
 
-    // Safety check: If somehow list is empty but state says questions remain
     if (vocabsToUse.length === 0) {
       console.error(
         "Generate question called with empty vocabs list, but questionsRemaining > 0. Resetting quiz state.",
       );
       setCurrentQuestion(null);
-      setQuestionsRemaining(0); // Correct the state inconsistency
-      // Optionally show an error to the user or navigate away
-      // showAlert('Terjadi kesalahan internal saat memuat soal berikutnya.', 'error');
-      // setActiveTab('list');
+      setQuestionsRemaining(0);
       return;
     }
 
-    // Select the next question: consistently take the first element from the (shuffled) list
     const question = vocabsToUse[0];
 
-    // Prepare options: The correct answer + 3 distractors
     let optionVocabs = [question];
 
-    // Get potential distractors: *all* vocabs EXCLUDING the current question
-    // Changed from only 'learned' distractors to potentially include unlearned ones
-    // if necessary, to ensure 4 options are always available if possible.
-    // Prioritize learned distractors first.
     const learnedDistractors = vocabList.filter(
       (v) => v.learned && v.id !== question.id,
     );
@@ -399,7 +516,6 @@ function App() {
       (v) => !v.learned && v.id !== question.id,
     );
 
-    // Shuffle potential distractors
     const shuffledLearnedDistractors = [...learnedDistractors].sort(
       () => Math.random() - 0.5,
     );
@@ -407,7 +523,6 @@ function App() {
       () => Math.random() - 0.5,
     );
 
-    // Add up to 3 distractors, prioritizing learned ones
     let addedDistractors = 0;
     for (
       let i = 0;
@@ -417,15 +532,11 @@ function App() {
       optionVocabs.push(shuffledLearnedDistractors[i]);
       addedDistractors++;
     }
-    // If still need more distractors, pull from unlearned ones
     for (let i = 0; i < shuffledUnlearned.length && addedDistractors < 3; i++) {
       optionVocabs.push(shuffledUnlearned[i]);
       addedDistractors++;
     }
 
-    // Fallback: if still less than 4 options (e.g., total vocab < 4), this part might run,
-    // but the startQuiz check should prevent this specific scenario for quiz start.
-    // This ensures 4 options even if duplicates might technically occur in extreme edge cases (very small vocab list).
     let fallbackAttempts = 0;
     while (
       optionVocabs.length < 4 &&
@@ -434,88 +545,69 @@ function App() {
     ) {
       let fallbackIndex = Math.floor(Math.random() * vocabList.length);
       let fallbackVocab = vocabList[fallbackIndex];
-      // Add if it's not the question itself (though it might already be an option)
       if (
         fallbackVocab.id !== question.id &&
         !optionVocabs.some((opt) => opt.id === fallbackVocab.id)
       ) {
         optionVocabs.push(fallbackVocab);
       }
-      fallbackAttempts++; // Prevent infinite loop
+      fallbackAttempts++;
     }
 
-    // Final shuffle of the options to be displayed
     const shuffledOptions = optionVocabs.sort(() => Math.random() - 0.5);
 
-    // Set state for the new question
     setCurrentQuestion(question);
     setOptions(shuffledOptions);
-    setSelectedOption(null); // Clear previous selection
-    setShowResult(false); // Hide result/feedback from previous question
-    setIsCorrect(false); // Reset correctness
+    setSelectedOption(null);
+    setShowResult(false);
+    setIsCorrect(false);
   };
 
   // Handle answer selection
   const handleSelectOption = (option) => {
-    if (showResult || !currentQuestion) return; // Prevent changes after result is shown or if no question
+    if (showResult || !currentQuestion) return;
 
     const correct = option.id === currentQuestion.id;
     setSelectedOption(option);
     setIsCorrect(correct);
-    setShowResult(true); // Show feedback immediately
+    setShowResult(true);
 
-    let currentScore = score; // Use a temp variable if score update depends on correctness
     if (correct) {
-      currentScore++; // Increment score locally first
-      setScore(currentScore); // Update state
+      setScore((prevScore) => prevScore + 1);
     }
 
-    // Add to history BEFORE updating state for next question potentially
     setQuizHistory((prevHistory) => [
       ...prevHistory,
       {
         question: currentQuestion,
-        options: options, // Store the options shown for this question
-        correctAnswer: currentQuestion, // The correct vocab object
-        userAnswer: option, // The vocab object the user selected
+        options: options,
+        correctAnswer: currentQuestion,
+        userAnswer: option,
         isCorrect: correct,
       },
     ]);
 
-    // Decrement remaining questions count immediately after answering
-    const remaining = questionsRemaining - 1;
-    setQuestionsRemaining(remaining);
-
-    // Remove the answered question from the *state* holding the list for the *next* generation
-    // This uses the functional update form of setState for safety
-    setQuizVocabs((prevQuizVocabs) => prevQuizVocabs.slice(1)); // Remove the first element
-
-    // Do NOT generate the next question here. Wait for the "Next" button click.
-    // Incrementing totalQuestions is handled in handleNextQuestion.
+    setQuestionsRemaining((prevRemaining) => prevRemaining - 1);
+    setQuizVocabs((prevQuizVocabs) => prevQuizVocabs.slice(1));
   };
 
   // Go to next question OR finish quiz
   const handleNextQuestion = () => {
-    // Increment total questions *answered* when moving to the next or finishing
-    setTotalQuestions(totalQuestions + 1);
+    setTotalQuestions((prevTotal) => prevTotal + 1);
 
     if (questionsRemaining > 0) {
-      // Generate the next question using the already updated quizVocabs list state
-      generateQuestion(); // No need to pass quizVocabs, it will use the state
+      generateQuestion();
     } else {
-      // Quiz finished
-      setCurrentQuestion(null); // Clear current question
-      setShowResult(false); // Hide result/options section for the last question
+      setCurrentQuestion(null);
+      setShowResult(false);
       setSelectedOption(null);
-      // Final score is already calculated, state reflects the end of the quiz
-      // User is now shown the results screen within the quiz tab
     }
   };
 
   // Toggle visibility of the quiz review section
   const toggleReview = () => {
     setShowReview(!showReview);
-    setSelectedReviewQuestionIndex(null); // Reset selected index when toggling review view
+    setSelectedReviewQuestionIndex(null);
   };
 
   // Handle clicking on a minimap button in review mode
@@ -530,38 +622,34 @@ function App() {
 
   // Function to handle login attempt
   const handleLogin = (event) => {
-    event.preventDefault(); // Prevent default form submission
-    // Simple validation
+    event.preventDefault();
     if (!username || !password) {
       setLoginError("Username dan password tidak boleh kosong.");
       return;
     }
-    setLoginError(null); // Clear previous error
+    setLoginError(null);
 
-    // Get credentials from environment variables or use fallbacks
-    const expectedUsername = process.env.REACT_APP_VOCAB_APP_USER || "user";
-    const expectedPassword =
-      process.env.REACT_APP_VOCAB_APP_PASSWORD || "password";
+    const expectedUsername = process.env.REACT_APP_VOCAB_APP_USER;
+    const expectedPassword = process.env.REACT_APP_VOCAB_APP_PASSWORD;
 
-    // Check credentials
     if (username === expectedUsername && password === expectedPassword) {
       setIsLoggedIn(true);
-      // Data loading is triggered by the useEffect watching isLoggedIn
+      localStorage.setItem("username", username); // Save username to local storage
+      localStorage.setItem("isLoggedIn", "true"); // Save login status to local storage
     } else {
       setIsLoggedIn(false);
       setLoginError("Username atau password salah.");
-      setPassword(""); // Clear password field on failed attempt for security/UX
+      setPassword("");
     }
   };
 
   // Function to handle logout
   const handleLogout = () => {
     setIsLoggedIn(false);
-    // Reset all application state to default values
     setVocabList([]);
     setSavedVocabs([]);
-    setIsLoading(false); // Ensure loading is false on logout screen
-    setActiveTab("list"); // Reset to default tab
+    setIsLoading(false);
+    setActiveTab("list");
     setCurrentQuestion(null);
     setOptions([]);
     setSelectedOption(null);
@@ -569,28 +657,70 @@ function App() {
     setIsCorrect(false);
     setScore(0);
     setTotalQuestions(0);
-    setCsvLoaded(false); // Reset CSV loaded status
+    setCsvLoaded(false);
     setQuizVocabs([]);
     setQuestionsRemaining(0);
     setQuizHistory([]);
     setShowReview(false);
     setSelectedReviewQuestionIndex(null);
-    setUsername(""); // Clear username input field
-    setPassword(""); // Clear password input field
-    setLoginError(null); // Clear any login errors
-    // Optional: Clear localStorage? Decide based on persistence needs.
-    // localStorage.removeItem("learnedVocabs"); // Uncomment if progress shouldn't persist across logouts
+    setUsername("");
+    setPassword("");
+    setLoginError(null);
+
+    localStorage.removeItem("username"); // Remove username from local storage
+    localStorage.removeItem("isLoggedIn"); // Remove login status from local storage
+    localStorage.removeItem("vocabList");
+    localStorage.removeItem("savedVocabs");
+    localStorage.removeItem("csvLoaded");
+    localStorage.removeItem("activeTab");
+  };
+
+  // Tambahkan fungsi ini ke dalam komponen Anda
+  const getFilteredVocabList = () => {
+    if (!searchTerm || searchTerm.trim() === "") {
+      return vocabList;
+    }
+
+    return vocabList.filter(
+      (vocab) =>
+        vocab.english.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vocab.indonesian.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
   };
 
   // ---------- RENDER LOGIC ----------
 
+  const HighlightText = ({ text, highlight }) => {
+    if (!highlight.trim()) {
+      return <span>{text}</span>;
+    }
+
+    const regex = new RegExp(
+      `(${highlight.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+      "gi",
+    );
+    const parts = text.split(regex);
+
+    return (
+      <span>
+        {parts.map((part, i) =>
+          regex.test(part) ? (
+            <span key={i} className="highlight-match">
+              {part}
+            </span>
+          ) : (
+            <span key={i}>{part}</span>
+          ),
+        )}
+      </span>
+    );
+  };
   // Loading state UI (only show if logged in and loading)
   if (isLoading && isLoggedIn) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
         <div className="loading-message">Memuat data...</div>
-        {/* Keep the upload section visible during initial load if fetch is slow/fails */}
         {!csvLoaded && (
           <div className="upload-container fallback-upload">
             <p>
@@ -628,7 +758,7 @@ function App() {
           />
         )}
         <div className="login-box card-style">
-          <h2 className="login-title">Vocab App Login</h2>
+          <h2 className="login-title">Vocab App</h2>
           <p className="login-info">
             Hubungi{" "}
             <a
@@ -687,10 +817,9 @@ function App() {
         <div className="app-header">
           <h1 className="app-title">Vocab Quiz App</h1>
           {/* Consider adding user info/logout button here */}
-          {/* <div className="header-user-info">
-            <span>Welcome, {username}!</span>
-            <button onClick={handleLogout} className="secondary-button logout-button-header">Logout</button>
-          </div> */}
+          <div className="header-user-info">
+            Welcome,<span>{username}!</span>
+          </div>
         </div>
         {/* Manual Upload Section (shown only if logged in AND csv failed to load/parse) */}
         {!csvLoaded && isLoggedIn && !isLoading && (
@@ -728,6 +857,12 @@ function App() {
                 Daftar Kosakata
               </button>
               <button
+                className={`tab-button ${activeTab === "inputVocab" ? "active" : ""}`}
+                onClick={() => setActiveTab("inputVocab")}
+              >
+                Input Kosakata
+              </button>
+              <button
                 className={`tab-button ${activeTab === "quiz" ? "active" : ""}`}
                 onClick={() => setActiveTab("quiz")}
                 title="Lihat bagian Quiz"
@@ -749,13 +884,39 @@ function App() {
             </div>
             {/* Tab Content */}
             <div className="tab-content">
+              {/* Input Vocab Tab */}
+              {activeTab === "inputVocab" && (
+                <div className="input-vocab-tab card-style">
+                  <h2>Input Kosakata Baru</h2>
+                  <div className="input-form">
+                    {/* State to hold multiple vocab entries */}
+                    {/* Use state to manage individual input fields */}
+                    {/* Define a state variable to hold the list of new vocab objects */}
+                    {vocabList.length > 0 && (
+                      <p className="vocab-list-length">
+                        Total Kosakata: {vocabList.length}
+                      </p>
+                    )}
+
+                    {/* Initialize an array to hold the vocab input fields */}
+                    {/* State for the new vocabulary input fields */}
+                    {/* Each entry in newVocabs will be an object with english and indonesian */}
+                    <VocabInputFields
+                      vocabList={vocabList}
+                      setVocabList={setVocabList}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Developer Tab */}
               {activeTab === "dev" && (
                 <div className="dev-info-tab card-style">
                   <h2 className="dev-title">Developer Info</h2>
                   <p className="dev-intro">
-                    Aplikasi ini dikembangkan oleh Andri Kusuma. Jangan ragu
-                    untuk terhubung atau mendukung developer!
+                    Aplikasi ini dikembangkan oleh Andri, dengan tujuan melatih
+                    vocab dengan metode quiz. Hubungi developer jika ada
+                    pertanyaan! Semoga bermanfaat.
                   </p>
                   <div className="dev-contact-grid">
                     <div className="dev-contact-item">
@@ -782,8 +943,8 @@ function App() {
                   <div className="dev-support-section">
                     <h3>Dukung Developer</h3>
                     <p>
-                      Jika Anda merasa aplikasi ini bermanfaat, pertimbangkan
-                      untuk mendukung pengembangannya:
+                      Jika Anda merasa aplikasi ini bermanfaat sangat amat
+                      diperbolehkan kok. Semoga rejeki lancar yaa!
                     </p>
                     <a
                       href="https://saweria.co/Codecztron"
@@ -791,7 +952,7 @@ function App() {
                       rel="noopener noreferrer"
                       className="dev-support-button primary-button"
                     >
-                      Dukung via Saweria ☕
+                      Donasi☕
                     </a>
                   </div>
                 </div>
@@ -831,14 +992,13 @@ function App() {
                           disabled={vocabList.length === 0}
                         >
                           {vocabList.length > 0 &&
-                          savedVocabs.length === vocabList.length // More reliable check
+                          savedVocabs.length === vocabList.length
                             ? "Batal Tandai Semua"
                             : "Tandai Semua"}
                         </button>
                         <button
                           onClick={startQuiz}
                           className="primary-button"
-                          disabled={savedVocabs.length < 4}
                           title={
                             savedVocabs.length < 4
                               ? "Tandai minimal 4 kata untuk memulai quiz"
@@ -851,9 +1011,171 @@ function App() {
                     </div>
                   </div>
 
-                  {vocabList.length > 0 ? (
-                    <div className="vocab-table-container card-style">
-                      <table className="vocab-table">
+                  {/* Modern Search Component */}
+                  <div className="search-and-filter-container">
+                    <div className="modern-search-container card-style">
+                      <div className="search-icon">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M21 21L16.65 16.65"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </div>
+                      <input
+                        type="text"
+                        className="modern-search-input"
+                        placeholder="Cari kosakata Inggris atau Indonesia..."
+                        value={searchTerm || ""}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                        }}
+                      />
+                      {searchTerm && (
+                        <button
+                          className="modern-clear-button"
+                          onClick={() => {
+                            setSearchTerm("");
+                          }}
+                          aria-label="Clear search"
+                        >
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M18 6L6 18"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M6 6L18 18"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Sorting Controls - Redesigned */}
+                    <div className="modern-sort-controls card-style">
+                      <label
+                        htmlFor="sort-select"
+                        className="modern-sort-label"
+                      >
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M4 6H20M4 12H14M4 18H8"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        Urutkan
+                      </label>
+                      <select
+                        id="sort-select"
+                        className="modern-sort-select"
+                        onChange={(e) => {
+                          const sortBy = e.target.value;
+                          let sortedVocabList = [...vocabList];
+                          switch (sortBy) {
+                            case "english":
+                              sortedVocabList = [...vocabList].sort((a, b) =>
+                                a.english.localeCompare(b.english),
+                              );
+                              break;
+                            case "englishZtoA":
+                              sortedVocabList = [...vocabList].sort((a, b) =>
+                                b.english.localeCompare(a.english),
+                              );
+                              break;
+                            case "indonesian":
+                              sortedVocabList = [...vocabList].sort((a, b) =>
+                                a.indonesian.localeCompare(b.indonesian),
+                              );
+                              break;
+                            case "indonesianZtoA":
+                              sortedVocabList = [...vocabList].sort((a, b) =>
+                                b.indonesian.localeCompare(a.indonesian),
+                              );
+                              break;
+                            case "date":
+                              sortedVocabList = [...vocabList].sort(
+                                (a, b) => a.id - b.id,
+                              );
+                              break;
+                            case "mostRecent":
+                              sortedVocabList = [...vocabList].sort(
+                                (a, b) => b.id - a.id,
+                              );
+                              break;
+                            default:
+                              break;
+                          }
+                          setVocabList(sortedVocabList);
+                        }}
+                      >
+                        <option value="">Pilih Urutan</option>
+                        <option value="mostRecent">Terbaru</option>
+                        <option value="date">Tanggal Ditambahkan</option>
+                        <option value="english">A - Z (Inggris)</option>
+                        <option value="englishZtoA">Z - A (Inggris)</option>
+                        <option value="indonesian">A - Z (Indonesia)</option>
+                        <option value="indonesianZtoA">
+                          Z - A (Indonesia)
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Search Results Info */}
+                  {searchTerm && (
+                    <div className="search-results-info card-style">
+                      <div className="results-count">
+                        <span className="results-highlight">
+                          {getFilteredVocabList().length}
+                        </span>{" "}
+                        dari {vocabList.length} kosakata ditemukan untuk "
+                        <span className="search-term">{searchTerm}</span>"
+                      </div>
+                    </div>
+                  )}
+
+                  {getFilteredVocabList().length > 0 ? (
+                    <div className="modern-vocab-table-container card-style">
+                      <table className="modern-vocab-table">
                         <thead>
                           <tr>
                             <th className="col-english">Inggris</th>
@@ -862,16 +1184,34 @@ function App() {
                           </tr>
                         </thead>
                         <tbody>
-                          {vocabList.map((vocab) => (
+                          {getFilteredVocabList().map((vocab) => (
                             <tr
                               key={vocab.id}
                               className={vocab.learned ? "learned-row" : ""}
                             >
-                              <td className="vocab-english">{vocab.english}</td>
-                              <td>{vocab.indonesian}</td>
+                              <td className="vocab-english">
+                                {searchTerm ? (
+                                  <HighlightText
+                                    text={vocab.english}
+                                    highlight={searchTerm}
+                                  />
+                                ) : (
+                                  vocab.english
+                                )}
+                              </td>
+                              <td className="vocab-indonesian">
+                                {searchTerm ? (
+                                  <HighlightText
+                                    text={vocab.indonesian}
+                                    highlight={searchTerm}
+                                  />
+                                ) : (
+                                  vocab.indonesian
+                                )}
+                              </td>
                               <td className="vocab-status">
                                 <label
-                                  className="checkbox-container"
+                                  className="modern-checkbox-container"
                                   title={
                                     vocab.learned
                                       ? "Tandai sebagai belum hafal"
@@ -883,7 +1223,25 @@ function App() {
                                     checked={vocab.learned}
                                     onChange={() => toggleLearned(vocab.id)}
                                   />
-                                  <span className="checkmark"></span>
+                                  <span className="modern-checkmark">
+                                    {vocab.learned && (
+                                      <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          d="M20 6L9 17L4 12"
+                                          stroke="white"
+                                          strokeWidth="3"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        />
+                                      </svg>
+                                    )}
+                                  </span>
                                 </label>
                               </td>
                             </tr>
@@ -892,12 +1250,68 @@ function App() {
                       </table>
                     </div>
                   ) : (
-                    <div className="card-style empty-list-message">
-                      <p>
-                        Daftar kosakata kosong. Jika Anda baru saja mengunggah
-                        file, pastikan formatnya benar ('Inggris;Indonesia') dan
-                        file tidak kosong.
-                      </p>
+                    <div className="modern-empty-state card-style">
+                      {searchTerm ? (
+                        <>
+                          <div className="empty-icon">
+                            <svg
+                              width="64"
+                              height="64"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M10 10L14 14M14 10L10 14M19 19L14.65 14.65M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </div>
+                          <p className="empty-title">
+                            Tidak ada hasil ditemukan
+                          </p>
+                          <p className="empty-description">
+                            Tidak ditemukan kosakata untuk "
+                            <strong>{searchTerm}</strong>". Coba dengan kata
+                            kunci lain atau periksa ejaan Anda.
+                          </p>
+                          <button
+                            className="reset-search-button"
+                            onClick={() => setSearchTerm("")}
+                          >
+                            Reset Pencarian
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="empty-icon">
+                            <svg
+                              width="64"
+                              height="64"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M12 8V12M12 16H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </div>
+                          <p className="empty-title">Daftar kosakata kosong</p>
+                          <p className="empty-description">
+                            Jika Anda baru saja mengunggah file, pastikan
+                            formatnya benar ('Inggris;Indonesia') dan file tidak
+                            kosong.
+                          </p>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -910,7 +1324,6 @@ function App() {
                   {currentQuestion && (
                     <div className="quiz-progress card-style">
                       Pertanyaan: {totalQuestions + 1} /{" "}
-                      {/* Total questions in *this specific quiz* is the initial number */}
                       {totalQuestions + questionsRemaining + 1} | Skor
                       Sementara: {score}
                     </div>
@@ -925,41 +1338,39 @@ function App() {
                       </div>
 
                       <div className="quiz-options">
-                        {options.map((option) => (
-                          <button
-                            key={option.id}
-                            onClick={() => handleSelectOption(option)}
-                            className={`quiz-option ${
-                              selectedOption // Base class
-                                ? selectedOption.id === option.id // Style the selected option
-                                  ? isCorrect
-                                    ? "correct-answer selected" // Specifically selected and correct
-                                    : "wrong-answer selected" // Specifically selected and wrong
-                                  : showResult && // Style the correct answer if shown *and* it wasn't the selected one
-                                      option.id === currentQuestion.id
-                                    ? "correct-answer"
-                                    : ""
-                                : "" // No selection yet
-                            } ${showResult ? "disabled" : ""}`} // Visual disable when result shown
-                            disabled={showResult} // Actual disable after answering
-                          >
-                            {option.indonesian}
-                            {/* Icons based on result */}
-                            {showResult && option.id === currentQuestion.id && (
-                              <span
-                                className={`answer-icon ${selectedOption?.id === option.id && isCorrect ? "selected-correct" : "correct"}`}
-                              >
-                                {" "}
-                                ✓
-                              </span>
-                            )}
-                            {showResult &&
-                              selectedOption?.id === option.id &&
-                              !isCorrect && (
+                        {options.map((option) => {
+                          const isSelected = selectedOption?.id === option.id;
+                          const isCorrectAnswer =
+                            option.id === currentQuestion.id;
+                          const buttonClasses = `quiz-option ${
+                            isSelected
+                              ? isCorrect
+                                ? "correct-answer selected"
+                                : "wrong-answer selected"
+                              : ""
+                          } ${showResult && !isSelected && isCorrectAnswer ? "correct-answer" : ""} ${showResult ? "disabled" : ""}`;
+                          return (
+                            <button
+                              key={option.id}
+                              onClick={() => handleSelectOption(option)}
+                              className={buttonClasses}
+                              disabled={showResult}
+                            >
+                              {option.indonesian}
+                              {showResult && isCorrectAnswer && (
+                                <span
+                                  className={`answer-icon ${isSelected && isCorrect ? "selected-correct" : "correct"}`}
+                                >
+                                  {" "}
+                                  ✓
+                                </span>
+                              )}
+                              {showResult && isSelected && !isCorrect && (
                                 <span className="answer-icon wrong"> ✗</span>
                               )}
-                          </button>
-                        ))}
+                            </button>
+                          );
+                        })}
                       </div>
 
                       {showResult && (
@@ -970,7 +1381,7 @@ function App() {
                           >
                             {questionsRemaining > 0
                               ? "Soal Berikutnya →"
-                              : "Lihat Hasil Akhir"}
+                              : "Hasil Akhir"}
                           </button>
                         </div>
                       )}
@@ -978,8 +1389,6 @@ function App() {
                   ) : (
                     // --- Quiz Welcome / Results Screen ---
                     <div className="quiz-welcome card-style">
-                      {/* Condition: Quiz was completed (totalQuestions > 0 means at least one question was answered AND moved past)
-                           AND no questions remain (questionsRemaining === 0) */}
                       {totalQuestions > 0 && questionsRemaining === 0 ? (
                         // --- Quiz Completed View ---
                         <div>
@@ -1006,12 +1415,11 @@ function App() {
                                   className="secondary-button"
                                   disabled={quizHistory.length === 0}
                                 >
-                                  Lihat Review Soal ({quizHistory.length})
+                                  Review Soal ({quizHistory.length})
                                 </button>
                                 <button
                                   onClick={restartQuiz}
                                   className="primary-button"
-                                  disabled={savedVocabs.length < 4}
                                   title={
                                     savedVocabs.length < 4
                                       ? "Minimal 4 kata untuk mulai ulang"
@@ -1024,7 +1432,7 @@ function App() {
                                   onClick={() => setActiveTab("list")}
                                   className="secondary-button"
                                 >
-                                  Kembali ke Daftar Kosakata
+                                  Daftar Kosakata
                                 </button>
                               </div>
                             </div>
@@ -1033,25 +1441,15 @@ function App() {
                             <div className="quiz-review">
                               <div className="review-header">
                                 <h4>Review Soal Quiz</h4>
-                                <button
-                                  onClick={toggleReview} // Button to close review -> back to score
-                                  className="secondary-button close-review-button"
-                                >
-                                  Kembali ke Hasil Quiz
-                                </button>
                               </div>
 
                               <div className="review-minimap">
                                 {quizHistory.map((historyItem, index) => (
                                   <button
                                     key={index}
-                                    className={`minimap-button ${
-                                      selectedReviewQuestionIndex === index
-                                        ? "active"
-                                        : ""
-                                    } ${historyItem.isCorrect ? "correct" : "wrong"}`}
+                                    className={`minimap-button ${selectedReviewQuestionIndex === index ? "active" : ""} ${historyItem.isCorrect ? "correct" : "wrong"}`}
                                     onClick={() => handleMinimapClick(index)}
-                                    title={`Lihat Soal ${index + 1} (${historyItem.isCorrect ? "Benar" : "Salah"})`}
+                                    title={`Soal ${index + 1} (${historyItem.isCorrect ? "Benar" : "Salah"})`}
                                   >
                                     {index + 1}
                                   </button>
@@ -1075,7 +1473,7 @@ function App() {
                                           selectedReviewQuestionIndex
                                         ];
                                       if (!historyItem)
-                                        return <p>Soal tidak ditemukan.</p>; // Safety check
+                                        return <p>Soal tidak ditemukan.</p>;
                                       return (
                                         <div className="review-item">
                                           <p className="review-question">
@@ -1095,11 +1493,7 @@ function App() {
                                             </strong>
                                           </p>
                                           <p
-                                            className={`review-user-answer ${
-                                              historyItem.isCorrect
-                                                ? "correct-text"
-                                                : "wrong-text"
-                                            }`}
+                                            className={`review-user-answer ${historyItem.isCorrect ? "correct-text" : "wrong-text"}`}
                                           >
                                             Jawaban Anda:{" "}
                                             {historyItem.userAnswer.indonesian}{" "}
@@ -1109,48 +1503,41 @@ function App() {
                                           </p>
                                           <details className="review-options-details">
                                             <summary>
-                                              Lihat Semua Pilihan Soal Ini
+                                              Semua Pilihan Soal Ini
                                             </summary>
                                             <ul className="review-options-list">
                                               {historyItem.options.map(
-                                                (option) => (
-                                                  <li
-                                                    key={option.id}
-                                                    className={`review-option ${
-                                                      option.id ===
-                                                      historyItem.correctAnswer
-                                                        .id
-                                                        ? "correct-answer" // Highlight correct answer
-                                                        : ""
-                                                    } ${
-                                                      option.id ===
-                                                        historyItem.userAnswer
-                                                          .id &&
-                                                      !historyItem.isCorrect
-                                                        ? "wrong-answer" // Highlight user's wrong answer
-                                                        : ""
-                                                    }`}
-                                                  >
-                                                    {option.indonesian}
-                                                    {option.id ===
-                                                      historyItem.correctAnswer
-                                                        .id && (
-                                                      <span className="answer-icon correct">
-                                                        {" "}
-                                                        ✓
-                                                      </span>
-                                                    )}
-                                                    {option.id ===
+                                                (option) => {
+                                                  const isCorrectOption =
+                                                    option.id ===
+                                                    historyItem.correctAnswer
+                                                      .id;
+                                                  const isWrongAnswer =
+                                                    option.id ===
                                                       historyItem.userAnswer
                                                         .id &&
-                                                      !historyItem.isCorrect && (
+                                                    !historyItem.isCorrect;
+                                                  return (
+                                                    <li
+                                                      key={option.id}
+                                                      className={`review-option ${isCorrectOption ? "correct-answer" : ""} ${isWrongAnswer ? "wrong-answer" : ""}`}
+                                                    >
+                                                      {option.indonesian}
+                                                      {isCorrectOption && (
+                                                        <span className="answer-icon correct">
+                                                          {" "}
+                                                          ✓
+                                                        </span>
+                                                      )}
+                                                      {isWrongAnswer && (
                                                         <span className="answer-icon wrong">
                                                           {" "}
                                                           ✗
                                                         </span>
                                                       )}
-                                                  </li>
-                                                ),
+                                                    </li>
+                                                  );
+                                                },
                                               )}
                                             </ul>
                                           </details>
@@ -1163,22 +1550,27 @@ function App() {
 
                               <div className="quiz-actions review-actions">
                                 <button
+                                  onClick={toggleReview}
+                                  className="secondary-button close-review-button"
+                                >
+                                  Hasil Quiz
+                                </button>
+                                <button
                                   onClick={restartQuiz}
                                   className="primary-button"
-                                  disabled={savedVocabs.length < 4}
                                   title={
                                     savedVocabs.length < 4
                                       ? "Minimal 4 kata untuk mulai ulang"
                                       : "Mulai Ulang Quiz"
                                   }
                                 >
-                                  Mulai Ulang Quiz
+                                  Mulai Ulang
                                 </button>
                                 <button
                                   onClick={() => setActiveTab("list")}
                                   className="secondary-button"
                                 >
-                                  Kembali ke Daftar Kosakata
+                                  Daftar Kosakata
                                 </button>
                               </div>
                             </div>
@@ -1189,18 +1581,16 @@ function App() {
                         <div>
                           <h3>Selamat Datang di Quiz Kosakata!</h3>
                           <p>
-                            Quiz ini akan menguji kata-kata yang telah Anda
-                            tandai sebagai "sudah dihafal". Saat ini Anda telah
-                            menandai <strong>{savedVocabs.length}</strong>{" "}
-                            kosakata dari total {vocabList.length}.
+                            Quiz ini akan melatih vocab yang sudah dihafal. Saat
+                            ini Anda telah menandai{" "}
+                            <strong>{savedVocabs.length}</strong> kosakata dari
+                            total {vocabList.length}.
                           </p>
 
                           {savedVocabs.length < 4 && (
                             <p className="warning-message">
-                              Anda memerlukan minimal <strong>4</strong>{" "}
-                              kosakata yang ditandai untuk memulai quiz. Silakan
-                              kembali ke daftar kosakata dan tandai beberapa
-                              kata.
+                              Memerlukan minimal <strong>4</strong> kosakata
+                              yang ditandai untuk memulai quiz.
                             </p>
                           )}
 
@@ -1216,7 +1606,6 @@ function App() {
                             <button
                               onClick={startQuiz}
                               className="primary-button large"
-                              disabled={savedVocabs.length < 4}
                               title={
                                 savedVocabs.length < 4
                                   ? "Tandai minimal 4 kata"
@@ -1229,7 +1618,7 @@ function App() {
                               onClick={() => setActiveTab("list")}
                               className="secondary-button"
                             >
-                              Kembali ke Daftar Kosakata
+                              Daftar Kosakata
                             </button>
                           </div>
 
@@ -1246,15 +1635,14 @@ function App() {
                                   tersisa).
                                 </p>
                                 <button
-                                  onClick={() => generateQuestion()} // Regenerate question to continue
+                                  onClick={() => generateQuestion()}
                                   className="secondary-button"
                                 >
                                   Lanjutkan Quiz
                                 </button>
                                 <button
-                                  onClick={restartQuiz} // Offer restart as well
+                                  onClick={restartQuiz}
                                   className="secondary-button"
-                                  disabled={savedVocabs.length < 4}
                                   title={
                                     savedVocabs.length < 4
                                       ? "Minimal 4 kata"
