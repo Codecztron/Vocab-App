@@ -821,6 +821,9 @@ function App() {
           <div className="header-user-info">
             Welcome,<span>{username}!</span>
           </div>
+          <div className="header-user-info">
+            Bismillah UTBK <span>600+</span>
+          </div>
         </div>
         {/* Manual Upload Section (shown only if logged in AND csv failed to load/parse) */}
         {!csvLoaded && isLoggedIn && !isLoading && (
